@@ -12,9 +12,7 @@ export default function Nav() {
   const { user, signOut } = useUser();
 
   const isActive = (href: string) =>
-    href === '/'
-      ? pathname === '/' || pathname.startsWith('/games')
-      : pathname.startsWith(href);
+    href === '/' ? pathname === '/' : pathname.startsWith(href);
 
   const go = (href: string) => {
     setOpen(false);
@@ -38,6 +36,9 @@ export default function Nav() {
 
         <div className="links">
           <Link href="/" className={isActive('/') ? 'active' : ''}>
+            Inicio
+          </Link>
+          <Link href="/games" className={isActive('/games') ? 'active' : ''}>
             Biblioteca
           </Link>
           <Link href="/hall-of-fame" className={isActive('/hall-of-fame') ? 'active' : ''}>
@@ -82,6 +83,13 @@ export default function Nav() {
         <a
           className={isActive('/') ? 'active' : ''}
           onClick={() => go('/')}
+          style={{ cursor: 'pointer' }}
+        >
+          Inicio
+        </a>
+        <a
+          className={isActive('/games') ? 'active' : ''}
+          onClick={() => go('/games')}
           style={{ cursor: 'pointer' }}
         >
           Biblioteca
