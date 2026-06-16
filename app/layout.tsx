@@ -40,11 +40,13 @@ export default function RootLayout({
         <div className="av-bg" />
         <div className="av-noise" />
         <UserProvider>
-          <Nav />
-          <main className="av-main">{children}</main>
-          <footer className="av-footer">
-            © 2026 ARCADE VAULT · HECHO CON PIXELES Y NEÓN · v2.6.0
-          </footer>
+          <div id="root">
+            <Nav />
+            <main className="av-main">{children}</main>
+            <footer className="av-footer">
+              © 2026 ARCADE VAULT · HECHO CON PIXELES Y NEÓN · v2.6.0
+            </footer>
+          </div>
         </UserProvider>
       </body>
     </html>
