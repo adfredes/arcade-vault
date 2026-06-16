@@ -44,6 +44,9 @@ export default function Nav() {
           <Link href="/hall-of-fame" className={isActive('/hall-of-fame') ? 'active' : ''}>
             Salón de la Fama
           </Link>
+          <Link href="/about" className={isActive('/about') ? 'active' : ''}>
+            Acerca de
+          </Link>
         </div>
 
         <div className="spacer" />
@@ -100,6 +103,13 @@ export default function Nav() {
           style={{ cursor: 'pointer' }}
         >
           Salón de la Fama
+        </a>
+        <a
+          className={isActive('/about') ? 'active' : ''}
+          onClick={() => go('/about')}
+          style={{ cursor: 'pointer' }}
+        >
+          Acerca de
         </a>
         <a
           className={isActive('/auth') ? 'active' : ''}
