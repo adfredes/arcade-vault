@@ -8,14 +8,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This project runs **Next.js 16.2.9 + React 19**. Per `AGENTS.md`, this version has breaking changes vs. older Next.js. **Read the relevant guide in `node_modules/next/dist/docs/` before writing any Next.js code** (App Router lives under `01-app`). Do not rely on training-data conventions; heed deprecation notices.
 
-## Commands
+## Styles
 
-- `npm run dev` — dev server (http://localhost:3000)
-- `npm run build` — production build
-- `npm start` — serve production build
-- `npm run lint` — ESLint (flat config, `eslint-config-next`)
-
-No test runner is configured yet.
+Usa siempre /frontend-design para diseñar la interfaz de usuario.
 
 ## Architecture
 
