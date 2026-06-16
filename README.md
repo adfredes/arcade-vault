@@ -15,4 +15,11 @@ https://github.com/Klerith/fernando-skills
 npx skills@latest add Klerith/fernando-skills
 ```
 
+## Commands
+
+- `npm run dev` — dev server (http://localhost:3000)
+- `npm run build` — production build
+- `npm start` — serve production build
+- `npm run lint` — ESLint (flat config, `eslint-config-next`)
+
 ##Hola Mundo !!!
