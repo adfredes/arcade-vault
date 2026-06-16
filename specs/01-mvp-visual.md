@@ -1,6 +1,6 @@
 # 01-mvp-visual
 
-**Estado:** Approved
+**Estado:** Implemented
 **Dependencias:** ninguna (primer spec del proyecto)
 **Fecha:** 2026-06-16
 **Objetivo:** Implementar las 5 pantallas visuales del MVP de Arcade Vault en Next.js App Router como componentes TypeScript, portando los templates JSX con routing por archivos, sin implementar ningún juego real.
