@@ -1,6 +1,6 @@
 # 04-supabase-setup
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Dependencias:** ninguna
 **Fecha:** 2026-06-17
 **Objetivo:** Instalar y configurar `@supabase/supabase-js` y `@supabase/ssr` en la aplicación Next.js, incluyendo clientes de browser y servidor.
