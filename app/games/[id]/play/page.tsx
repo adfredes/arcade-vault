@@ -2,15 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { GAMES } from '@/lib/data';
 import { useUser } from '@/context/UserContext';
 
 export default function GamePlayerPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user } = useUser();
-
-  const game = GAMES.find((g) => g.id === id);
 
   const [score, setScore] = useState(0);
   const [lives] = useState(3);
@@ -51,15 +48,15 @@ export default function GamePlayerPage() {
     setPlayerName(user?.name ?? 'INVITADO');
   };
 
-  if (!game) return null;
-
   return (
     <div className="av-player fade-in">
       <div className="player-hud">
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
           <div className="hud-stat">
             <div className="l">Jugador</div>
-            <div className="v" style={{ color: 'var(--ink)' }}>{playerName}</div>
+            <div className="v" style={{ color: 'var(--ink)' }}>
+              {playerName}
+            </div>
           </div>
           <div className="hud-stat">
             <div className="l">Puntuación</div>
@@ -79,8 +76,15 @@ export default function GamePlayerPage() {
           <button className="btn yellow" onClick={() => setPaused((p) => !p)}>
             {paused ? 'REANUDAR' : 'PAUSA'}
           </button>
-          <button className="btn magenta" onClick={() => setOver(true)}>FIN</button>
-          <button className="btn ghost" onClick={() => router.push(`/games/${id}`)}>SALIR</button>
+          <button className="btn magenta" onClick={() => setOver(true)}>
+            FIN
+          </button>
+          <button
+            className="btn ghost"
+            onClick={() => router.push(`/games/${id}`)}
+          >
+            SALIR
+          </button>
         </div>
       </div>
 
@@ -95,10 +99,23 @@ export default function GamePlayerPage() {
           </div>
 
           {paused && (
-            <div className="crt-content" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 5 }}>
+            <div
+              className="crt-content"
+              style={{ background: 'rgba(0,0,0,0.6)', zIndex: 5 }}
+            >
               <div>
-                <div className="pixel neon-yellow" style={{ fontSize: 22 }}>EN PAUSA</div>
-                <div className="mono" style={{ fontSize: 11, color: 'var(--ink-dim)', marginTop: 10, letterSpacing: '0.16em' }}>
+                <div className="pixel neon-yellow" style={{ fontSize: 22 }}>
+                  EN PAUSA
+                </div>
+                <div
+                  className="mono"
+                  style={{
+                    fontSize: 11,
+                    color: 'var(--ink-dim)',
+                    marginTop: 10,
+                    letterSpacing: '0.16em',
+                  }}
+                >
                   PULSA REANUDAR PARA CONTINUAR
                 </div>
               </div>
@@ -108,7 +125,7 @@ export default function GamePlayerPage() {
 
         <div className="crt-bottom">
           <span className="led">SEÑAL OK</span>
-          <span>{game.title} · CRT-83 · 60 HZ</span>
+          <span>{id?.toUpperCase()} · CRT-83 · 60 HZ</span>
           <span>CARGA · 1MB</span>
         </div>
       </div>
@@ -138,7 +155,9 @@ export default function GamePlayerPage() {
             )}
 
             <div className="actions">
-              <button className="btn" onClick={restart}>JUGAR DE NUEVO</button>
+              <button className="btn" onClick={restart}>
+                JUGAR DE NUEVO
+              </button>
               <button className="btn magenta" onClick={() => router.push('/')}>
                 VOLVER AL VAULT
               </button>

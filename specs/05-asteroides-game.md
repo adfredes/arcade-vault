@@ -1,6 +1,6 @@
 # 05-asteroides-game
 
-**Estado:** Aprobado
+**Estado:** IMplementado
 **Dependencias:** 01-mvp-visual (globals.css, clases CSS), 02-home-landing (GAMES, rutas /games)
 **Fecha:** 2026-06-17
 **Objetivo:** Integrar el juego Asteroides como entrada propia en la plataforma Arcade Vault,

@@ -7,6 +7,7 @@ import AsteroidsGame, {
   AsteroidsGameHandle,
 } from '@/components/games/AsteroidsGame';
 import { AsteroidsCallbacks } from '@/lib/games/asteroids';
+import { saveScore } from '@/lib/supabase/saveScore';
 
 export default function AsteroidsPlayPage() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function AsteroidsPlayPage() {
   const [finalScore, setFinalScore] = useState(0);
   const [playerName, setPlayerName] = useState(user?.name ?? 'INVITADO');
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [gameKey, setGameKey] = useState(0);
 
   const gameRef = useRef<AsteroidsGameHandle>(null);
@@ -44,18 +46,14 @@ export default function AsteroidsPlayPage() {
     }
   };
 
-  const saveScore = () => {
+  const handleSave = async () => {
+    setSaving(true);
     try {
-      const all = JSON.parse(localStorage.getItem('av_scores') ?? '[]');
-      all.push({
-        game: 'asteroides',
-        score: finalScore,
-        name: playerName,
-        at: Date.now(),
-      });
-      localStorage.setItem('av_scores', JSON.stringify(all));
-    } catch {}
-    setSaved(true);
+      await saveScore('asteroides', playerName, finalScore);
+    } finally {
+      setSaving(false);
+      setSaved(true);
+    }
   };
 
   const restart = () => {
@@ -66,6 +64,7 @@ export default function AsteroidsPlayPage() {
     setOver(false);
     setFinalScore(0);
     setSaved(false);
+    setSaving(false);
     setPlayerName(user?.name ?? 'INVITADO');
     setGameKey((k) => k + 1);
   };
@@ -166,8 +165,12 @@ export default function AsteroidsPlayPage() {
                   }
                   placeholder="TUS INICIALES"
                 />
-                <button className="btn yellow" onClick={saveScore}>
-                  GUARDAR PUNTUACIÓN
+                <button
+                  className="btn yellow"
+                  onClick={handleSave}
+                  disabled={saving}
+                >
+                  {saving ? 'GUARDANDO…' : 'GUARDAR PUNTUACIÓN'}
                 </button>
               </div>
             ) : (

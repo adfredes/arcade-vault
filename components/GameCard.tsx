@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Game } from '@/lib/data';
+import type { Game } from '@/lib/supabase/queries';
 
 type Props = { game: Game };
 
@@ -29,24 +29,31 @@ export default function GameCard({ game }: Props) {
   };
 
   const btnClass =
-    game.color === 'magenta' ? 'btn magenta' :
-    game.color === 'yellow'  ? 'btn yellow'  : 'btn';
+    game.color === 'magenta'
+      ? 'btn magenta'
+      : game.color === 'yellow'
+        ? 'btn yellow'
+        : 'btn';
 
   return (
-    <div ref={ref} className="card" onMouseMove={onMove} onMouseLeave={onLeave} onClick={go}>
+    <div
+      ref={ref}
+      className="card"
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      onClick={go}
+    >
       <div className="cover">
-        <div className={`cover-bg ${game.cover}`} />
+        <div className={`cover-bg ${game.cover ?? ''}`} />
         <div className="label">{game.cat}</div>
       </div>
       <div className="meta">
         <div className="title">{game.title}</div>
         <div className="desc">{game.short}</div>
         <div className="row">
-          <div className="score-badge">
-            <span>MEJOR PUNTUACIÓN</span>
-            <b>{game.best.toLocaleString('es-ES')}</b>
-          </div>
-          <button className={btnClass} onClick={go}>JUGAR</button>
+          <button className={btnClass} onClick={go}>
+            JUGAR
+          </button>
         </div>
       </div>
     </div>

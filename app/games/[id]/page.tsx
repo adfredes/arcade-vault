@@ -1,26 +1,32 @@
-'use client';
+import Link from 'next/link';
+import { getGame, getTopScores, getGameStats } from '@/lib/supabase/queries';
 
-import { useParams, useRouter } from 'next/navigation';
-import { useMemo } from 'react';
-import { GAMES, seededScores } from '@/lib/data';
+export const revalidate = 0;
 
-export default function GameDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const router = useRouter();
+export default async function GameDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
 
-  const game = useMemo(() => GAMES.find((g) => g.id === id), [id]);
-  const scores = useMemo(
-    () => (id ? seededScores(id.length * 17 + 3, 10) : []),
-    [id],
-  );
+  const [game, scores, stats] = await Promise.all([
+    getGame(id),
+    getTopScores(id, 10),
+    getGameStats(id),
+  ]);
 
   if (!game) return null;
+
+  const playsDisplay =
+    stats.plays > 0 ? stats.plays.toLocaleString('es-ES') : '0';
+  const bestDisplay = stats.best;
 
   return (
     <div className="av-detail fade-in">
       <div>
         <div className="detail-cover">
-          <div className={`cover-bg ${game.cover}`} />
+          <div className={`cover-bg ${game.cover ?? ''}`} />
         </div>
 
         <div style={{ marginTop: 20 }} className="detail-info">
@@ -37,32 +43,41 @@ export default function GameDetailPage() {
           <div className="stat-strip">
             <div>
               <div className="l">Partidas</div>
-              <div className="v">{game.plays}</div>
+              <div className="v">{playsDisplay}</div>
             </div>
             <div>
               <div className="l">Mejor global</div>
-              <div className="v" style={{ color: 'var(--magenta)', textShadow: '0 0 6px rgba(255,0,110,0.5)' }}>
-                {game.best.toLocaleString('es-ES')}
+              <div
+                className="v"
+                style={{
+                  color: 'var(--magenta)',
+                  textShadow: '0 0 6px rgba(255,0,110,0.5)',
+                }}
+              >
+                {bestDisplay.toLocaleString('es-ES')}
               </div>
             </div>
             <div>
               <div className="l">Dificultad</div>
-              <div className="v" style={{ color: 'var(--yellow)', textShadow: '0 0 6px rgba(245,255,0,0.5)' }}>
+              <div
+                className="v"
+                style={{
+                  color: 'var(--yellow)',
+                  textShadow: '0 0 6px rgba(245,255,0,0.5)',
+                }}
+              >
                 ★ ★ ★ ☆ ☆
               </div>
             </div>
           </div>
 
           <div className="detail-actions">
-            <button
-              className="btn xl pulse"
-              onClick={() => router.push(`/games/${game.id}/play`)}
-            >
+            <Link href={`/games/${id}/play`} className="btn xl pulse">
               ▶&nbsp; JUGAR AHORA
-            </button>
-            <button className="btn ghost lg" onClick={() => router.push('/')}>
+            </Link>
+            <Link href="/" className="btn ghost lg">
               VOLVER AL VAULT
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -70,24 +85,55 @@ export default function GameDetailPage() {
       <aside>
         <div className="leaderboard">
           <h3>MEJORES PUNTUACIONES</h3>
-          {scores.map((r, i) => (
+          {scores.length === 0 ? (
             <div
-              key={r.name}
-              className={
-                'lb-row' +
-                (i === 0 ? ' top1' : i === 1 ? ' top2' : i === 2 ? ' top3' : '')
-              }
+              className="mono"
+              style={{
+                fontSize: 11,
+                color: 'var(--ink-dim)',
+                letterSpacing: '0.14em',
+                padding: '20px 0',
+                textAlign: 'center',
+              }}
             >
-              <div className="rk">#{String(r.rank).padStart(2, '0')}</div>
-              <div className="pl">
-                {r.name}
-                <div style={{ fontSize: 10, color: 'var(--ink-faint)', letterSpacing: '0.1em' }}>
-                  {r.date}
-                </div>
-              </div>
-              <div className="sc">{r.score.toLocaleString('es-ES')}</div>
+              SIN PUNTUACIONES AÚN
             </div>
-          ))}
+          ) : (
+            scores.map((r, i) => {
+              const date = new Date(r.created_at);
+              const dateStr = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+              return (
+                <div
+                  key={r.id}
+                  className={
+                    'lb-row' +
+                    (i === 0
+                      ? ' top1'
+                      : i === 1
+                        ? ' top2'
+                        : i === 2
+                          ? ' top3'
+                          : '')
+                  }
+                >
+                  <div className="rk">#{String(i + 1).padStart(2, '0')}</div>
+                  <div className="pl">
+                    {r.player_name}
+                    <div
+                      style={{
+                        fontSize: 10,
+                        color: 'var(--ink-faint)',
+                        letterSpacing: '0.1em',
+                      }}
+                    >
+                      {dateStr}
+                    </div>
+                  </div>
+                  <div className="sc">{r.score.toLocaleString('es-ES')}</div>
+                </div>
+              );
+            })
+          )}
         </div>
       </aside>
     </div>
