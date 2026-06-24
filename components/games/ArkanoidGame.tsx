@@ -6,6 +6,7 @@ import {
   ArkanoidCallbacks,
   ArkanoidController,
 } from '@/lib/games/arkanoid';
+import { DEFAULT_SKIN, type SkinId } from '@/lib/games/skins';
 
 export interface ArkanoidGameHandle {
   pause: () => void;
@@ -14,10 +15,11 @@ export interface ArkanoidGameHandle {
 
 interface Props {
   callbacks: ArkanoidCallbacks;
+  skin?: SkinId;
 }
 
 const ArkanoidGame = forwardRef<ArkanoidGameHandle, Props>(
-  function ArkanoidGame({ callbacks }, ref) {
+  function ArkanoidGame({ callbacks, skin = DEFAULT_SKIN }, ref) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const controllerRef = useRef<ArkanoidController | null>(null);
 
@@ -32,7 +34,7 @@ const ArkanoidGame = forwardRef<ArkanoidGameHandle, Props>(
 
     useEffect(() => {
       if (!canvasRef.current) return;
-      const controller = initArkanoid(canvasRef.current, callbacks);
+      const controller = initArkanoid(canvasRef.current, callbacks, skin);
       controllerRef.current = controller;
       return () => {
         controller.destroy();

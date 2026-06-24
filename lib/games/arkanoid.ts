@@ -1,3 +1,10 @@
+import {
+  ARKANOID_SKINS,
+  DEFAULT_SKIN,
+  type ArkanoidPalette,
+  type SkinId,
+} from '@/lib/games/skins';
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface ArkanoidCallbacks {
@@ -16,7 +23,10 @@ export interface ArkanoidController {
 export function initArkanoid(
   canvas: HTMLCanvasElement,
   callbacks: ArkanoidCallbacks,
+  skin: SkinId = DEFAULT_SKIN,
 ): ArkanoidController {
+  const palette: ArkanoidPalette =
+    ARKANOID_SKINS[skin] ?? ARKANOID_SKINS.classic;
   // ── LEVELS (inline from levels.js) ─────────────────────────────────────────
 
   const LEVELS = (() => {
@@ -177,6 +187,26 @@ export function initArkanoid(
     rawImg.src = '/arkanoid/spritesheet-breakout.png';
   }
 
+  // Recolors only the opaque pixels of the sprite just drawn into [x,y,w,h]
+  // using the active palette tint. No-op when the skin has no tint (classic).
+  function applyTint(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+  ) {
+    if (!palette.tint) return;
+    const prevOp = ctx.globalCompositeOperation;
+    const prevShadow = ctx.shadowBlur;
+    ctx.shadowBlur = 0; // tint pass must not re-emit glow
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.fillStyle = palette.tint;
+    ctx.fillRect(x, y, w, h);
+    ctx.globalCompositeOperation = prevOp;
+    ctx.shadowBlur = prevShadow;
+  }
+
   function drawFrame(
     ctx: CanvasRenderingContext2D,
     frame: Frame,
@@ -187,6 +217,7 @@ export function initArkanoid(
   ) {
     if (!ssLoaded || !ssImg) return;
     ctx.drawImage(ssImg, frame.sx, frame.sy, frame.sw, frame.sh, x, y, w, h);
+    applyTint(ctx, x, y, w, h);
   }
 
   function drawSprite(
@@ -203,6 +234,7 @@ export function initArkanoid(
       : SPRITES[name];
     if (!sp) return;
     ctx.drawImage(ssImg, sp.sx, sp.sy, sp.sw, sp.sh, x, y, w, h);
+    applyTint(ctx, x, y, w, h);
   }
 
   // ── Constants ────────────────────────────────────────────────────────────────
@@ -397,9 +429,9 @@ export function initArkanoid(
   // ── Render ───────────────────────────────────────────────────────────────────
 
   function drawOverlay(message: string) {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.fillStyle = palette.overlay;
     ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = palette.text;
     ctx.font = 'bold 64px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -407,9 +439,9 @@ export function initArkanoid(
   }
 
   function drawPauseOverlay() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+    ctx.fillStyle = palette.overlay;
     ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = palette.text;
     ctx.font = 'bold 56px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -417,8 +449,12 @@ export function initArkanoid(
   }
 
   function draw() {
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = palette.bg;
     ctx.fillRect(0, 0, W, H);
+
+    // Glow wraps the sprite pass only; reset before overlays/background.
+    ctx.shadowColor = palette.glowColor;
+    ctx.shadowBlur = palette.glow;
 
     for (const block of blocks)
       if (block.alive)
@@ -448,6 +484,10 @@ export function initArkanoid(
 
     drawSprite(ctx, 'paddle', paddle.x, paddle.y, paddle.w, paddle.h);
     drawSprite(ctx, 'ball', ball.x, ball.y, ball.w, ball.h);
+
+    // Reset glow so overlays render crisply.
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
 
     if (gameState === 'gameover') drawOverlay('GAME OVER');
     if (gameState === 'win') drawOverlay('¡Completaste el juego!');

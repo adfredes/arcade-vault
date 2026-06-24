@@ -134,3 +134,55 @@ export const SNAKE_SKINS: Record<SkinId, SnakePalette> = {
     glow: 6,
   },
 };
+
+// ── Arkanoid ───────────────────────────────────────────────────────────────
+// Arkanoid renders its paddle/ball/blocks from a spritesheet PNG, so the only
+// programmable colors are the playfield background, the glow cast around the
+// sprites and an optional tint laid over them, plus the overlay/HUD text. The
+// `tint` recolors the opaque sprite pixels via a `source-atop` pass (null keeps
+// the original spritesheet colors, exactly as in classic).
+
+export interface ArkanoidPalette {
+  /** Playfield background fill. */
+  bg: string;
+  /** Glow cast around sprites (shadowColor). */
+  glowColor: string;
+  /** Glow radius (shadowBlur). 0 disables glow (classic). */
+  glow: number;
+  /** Translucent tint laid over sprite pixels, or null to keep original art. */
+  tint: string | null;
+  /** Game-over / win / pause overlay backdrop fill. */
+  overlay: string;
+  /** Overlay + pause text color. */
+  text: string;
+}
+
+export const ARKANOID_SKINS: Record<SkinId, ArkanoidPalette> = {
+  // Exact replica of the original hardcoded colors. Default; never changes.
+  classic: {
+    bg: '#000',
+    glowColor: 'transparent',
+    glow: 0,
+    tint: null,
+    overlay: 'rgba(0, 0, 0, 0.6)',
+    text: '#fff',
+  },
+  // Saturated, vibrant, aligned to the site CSS tokens, with a cyan glow.
+  neon: {
+    bg: '#0a0a0f', // --bg
+    glowColor: '#00f5ff', // --cyan
+    glow: 14,
+    tint: null, // keep the vivid spritesheet colors; the glow makes them "vibrate"
+    overlay: 'rgba(10, 10, 15, 0.72)',
+    text: '#00f5ff', // --cyan
+  },
+  // CRT / phosphor: warm amber playfield, soft amber glow + amber tint.
+  retro: {
+    bg: '#0b0900',
+    glowColor: '#ffb000', // amber phosphor
+    glow: 8,
+    tint: 'rgba(255, 176, 0, 0.28)',
+    overlay: 'rgba(11, 9, 0, 0.72)',
+    text: '#ffd27a', // warm amber
+  },
+};

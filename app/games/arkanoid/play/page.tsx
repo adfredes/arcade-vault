@@ -7,6 +7,7 @@ import ArkanoidGame, {
   ArkanoidGameHandle,
 } from '@/components/games/ArkanoidGame';
 import { ArkanoidCallbacks } from '@/lib/games/arkanoid';
+import SkinSelector, { useSkin } from '@/components/games/SkinSelector';
 import { saveScore } from '@/lib/supabase/saveScore';
 
 export default function ArkanoidPlayPage() {
@@ -23,6 +24,7 @@ export default function ArkanoidPlayPage() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [gameKey, setGameKey] = useState(0);
+  const [skin, setSkin] = useSkin();
 
   const gameRef = useRef<ArkanoidGameHandle>(null);
 
@@ -101,6 +103,7 @@ export default function ArkanoidPlayPage() {
         </div>
 
         <div className="hud-actions">
+          <SkinSelector value={skin} onChange={setSkin} disabled={paused} />
           <button className="btn yellow" onClick={togglePause} disabled={over}>
             {paused ? 'REANUDAR' : 'PAUSA'}
           </button>
@@ -124,7 +127,12 @@ export default function ArkanoidPlayPage() {
             position: 'relative',
           }}
         >
-          <ArkanoidGame key={gameKey} ref={gameRef} callbacks={callbacks} />
+          <ArkanoidGame
+            key={`${gameKey}-${skin}`}
+            ref={gameRef}
+            callbacks={callbacks}
+            skin={skin}
+          />
         </div>
 
         <div className="crt-bottom">
