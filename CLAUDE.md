@@ -40,6 +40,8 @@ Leaderboard helpers live in `lib/supabase/queries.ts` (`getAllGames`, `getGame`,
 
 Per `README.md`, this project follows **Spec Driven Design** using the `/spec` and `/spec-impl` skills from `Klerith/fernando-skills`. Prefer writing/iterating a spec before implementation. Specs live in `specs/NN-<name>.md`.
 
+To decide **which** game to add next, use the project agent **`game-planner`** (`.claude/agents/game-planner.md`): it analyzes the current catalog, proposes the next game with justification, and keeps a persistent suggestions TODO at `references/game-suggetions-todo.md` (so it never re-suggests an idea). It writes only that memory file — no production code — and hands off to `/nuevo-juego`.
+
 To add a new game, use the project skill **`/nuevo-juego <source>`** (`.claude/skills/nuevo-juego/`): it inspects a vanilla `game.js` (from `references/started-games/`) and generates a `specs/NN-<id>-game.md` ready for `/spec-impl`. It writes only the spec — no production code.
 
 Always design UI with **`/frontend-design`**.
