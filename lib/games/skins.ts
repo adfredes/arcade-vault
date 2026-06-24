@@ -82,3 +82,55 @@ export const ASTEROIDS_SKINS: Record<SkinId, AsteroidsPalette> = {
     glow: 6,
   },
 };
+
+// ── Snake ──────────────────────────────────────────────────────────────────────
+
+export interface SnakePalette {
+  /** Canvas background fill. */
+  bg: string;
+  /** Subtle grid lines (full rgba/rgb string, drawn as-is). */
+  grid: string;
+  /** Snake head cell fill. */
+  snakeHead: string;
+  /** Snake body cell fill. */
+  snakeBody: string;
+  /** Pause / game-over overlay backdrop (full rgba string). */
+  overlayBg: string;
+  /** Pause / game-over overlay text. */
+  overlayText: string;
+  /** Glow radius (shadowBlur) on snake cells. 0 disables glow (classic). */
+  glow: number;
+}
+
+export const SNAKE_SKINS: Record<SkinId, SnakePalette> = {
+  // Exact replica of the original hardcoded colors. Default; never changes.
+  classic: {
+    bg: '#0a0a12',
+    grid: 'rgba(46, 194, 126, 0.06)',
+    snakeHead: '#aef6c8',
+    snakeBody: '#2ec27e',
+    overlayBg: 'rgba(0, 0, 0, 0.6)',
+    overlayText: '#fff',
+    glow: 0,
+  },
+  // Saturated, vibrant, aligned to the site CSS tokens, with glow.
+  neon: {
+    bg: '#0a0a0f', // --bg
+    grid: 'rgba(0, 245, 255, 0.07)', // --cyan, faint
+    snakeHead: '#f5ff00', // --yellow (bright head leads the trail)
+    snakeBody: '#00ff88', // --green
+    overlayBg: 'rgba(10, 10, 15, 0.7)',
+    overlayText: '#00f5ff', // --cyan
+    glow: 10,
+  },
+  // CRT / phosphor: warm amber backdrop, green phosphor snake, soft glow.
+  retro: {
+    bg: '#0b0900',
+    grid: 'rgba(57, 255, 20, 0.08)', // phosphor green grid
+    snakeHead: '#ffd27a', // warm amber head
+    snakeBody: '#39ff14', // bright phosphor green body
+    overlayBg: 'rgba(11, 9, 0, 0.72)',
+    overlayText: '#ffb000', // amber phosphor
+    glow: 6,
+  },
+};

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@/context/UserContext';
 import SnakeGame, { SnakeGameHandle } from '@/components/games/SnakeGame';
 import { SnakeCallbacks } from '@/lib/games/snake';
+import SkinSelector, { useSkin } from '@/components/games/SkinSelector';
 import { saveScore } from '@/lib/supabase/saveScore';
 
 export default function SnakePlayPage() {
@@ -19,6 +20,7 @@ export default function SnakePlayPage() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [gameKey, setGameKey] = useState(0);
+  const [skin, setSkin] = useSkin();
 
   const gameRef = useRef<SnakeGameHandle>(null);
 
@@ -85,6 +87,7 @@ export default function SnakePlayPage() {
         </div>
 
         <div className="hud-actions">
+          <SkinSelector value={skin} onChange={setSkin} disabled={paused} />
           <button className="btn yellow" onClick={togglePause} disabled={over}>
             {paused ? 'REANUDAR' : 'PAUSA'}
           </button>
@@ -108,7 +111,12 @@ export default function SnakePlayPage() {
             position: 'relative',
           }}
         >
-          <SnakeGame key={gameKey} ref={gameRef} callbacks={callbacks} />
+          <SnakeGame
+            key={`${gameKey}-${skin}`}
+            ref={gameRef}
+            callbacks={callbacks}
+            skin={skin}
+          />
         </div>
 
         <div className="crt-bottom">
