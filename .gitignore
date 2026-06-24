@@ -30,6 +30,9 @@
 .DS_Store
 *.pem
 
+# temporary git worktrees used by agents
+.claude/worktrees/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
