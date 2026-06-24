@@ -7,6 +7,7 @@ import AsteroidsGame, {
   AsteroidsGameHandle,
 } from '@/components/games/AsteroidsGame';
 import { AsteroidsCallbacks } from '@/lib/games/asteroids';
+import SkinSelector, { useSkin } from '@/components/games/SkinSelector';
 import { saveScore } from '@/lib/supabase/saveScore';
 
 export default function AsteroidsPlayPage() {
@@ -23,6 +24,7 @@ export default function AsteroidsPlayPage() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [gameKey, setGameKey] = useState(0);
+  const [skin, setSkin] = useSkin();
 
   const gameRef = useRef<AsteroidsGameHandle>(null);
 
@@ -96,6 +98,7 @@ export default function AsteroidsPlayPage() {
         </div>
 
         <div className="hud-actions">
+          <SkinSelector value={skin} onChange={setSkin} disabled={paused} />
           <button className="btn yellow" onClick={togglePause} disabled={over}>
             {paused ? 'REANUDAR' : 'PAUSA'}
           </button>
@@ -109,8 +112,21 @@ export default function AsteroidsPlayPage() {
       </div>
 
       <div className="crt">
-        <div className="crt-screen" style={{ padding: 0 }}>
-          <AsteroidsGame key={gameKey} ref={gameRef} callbacks={callbacks} />
+        <div
+          className="crt-screen"
+          style={{
+            padding: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <AsteroidsGame
+            key={`${gameKey}-${skin}`}
+            ref={gameRef}
+            callbacks={callbacks}
+            skin={skin}
+          />
 
           {paused && !over && (
             <div
