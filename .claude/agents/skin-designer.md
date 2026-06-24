@@ -100,10 +100,8 @@ avisá y confirmá antes de re-trabajarlo. Verificá que el juego exista en `imp
 5. **Montar el selector** en la play page `app/games/<id>/play/page.tsx` y conectar el estado de skin
    al componente del juego.
 
-**Paso 4 — Verificación visual en modo oscuro.** Levantá el dev server (`npm run dev`) y con Playwright
-abrí `/games/<id>/play`. Por **cada** skin, sacá un screenshot a **`.playwright-screenshots/`** (memoria
-del proyecto) y revisá contraste y legibilidad sobre el fondo oscuro: ningún elemento debe perderse en
-negro, el HUD debe leerse, el clásico debe verse idéntico a hoy.
+**Paso 4 — Verificación en modo oscuro.**  Por **cada** skin revisá contraste y legibilidad sobre el fondo oscuro: ningún elemento debe perderse en
+negro, el HUD debe leerse.
 
 **Paso 5 — Typecheck.** Corré `npx tsc --noEmit`; resolvé cualquier error antes de cerrar.
 
