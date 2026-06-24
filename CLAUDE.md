@@ -44,6 +44,8 @@ To decide **which** game to add next, use the project agent **`game-planner`** (
 
 To add a new game, use the project skill **`/nuevo-juego <source>`** (`.claude/skills/nuevo-juego/`): it inspects a vanilla `game.js` (from `references/started-games/`) and generates a `specs/NN-<id>-game.md` ready for `/spec-impl`. It writes only the spec — no production code.
 
+To explore variants of a **game you already chose**, use the project agent **`game-jam`** (`.claude/agents/game-jam.md`): given a provided game (name, brief description, or a `references/started-games/` folder) it generates 2-3 complete **alternative variant** specs (different mechanics/scoring/difficulty) under `specs/game-jam/<game-id>/`, in the style of `specs/07-09`, for you to review and pick one for `/spec-impl`. It does **not** pick the game. It writes only specs inside `specs/game-jam/` — no production code, no SQL.
+
 Always design UI with **`/frontend-design`**.
 
 ### Tooling
