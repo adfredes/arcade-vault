@@ -6,6 +6,7 @@ import {
   AsteroidsCallbacks,
   AsteroidsController,
 } from '@/lib/games/asteroids';
+import { DEFAULT_SKIN, type SkinId } from '@/lib/games/skins';
 
 export interface AsteroidsGameHandle {
   pause: () => void;
@@ -14,10 +15,11 @@ export interface AsteroidsGameHandle {
 
 interface Props {
   callbacks: AsteroidsCallbacks;
+  skin?: SkinId;
 }
 
 const AsteroidsGame = forwardRef<AsteroidsGameHandle, Props>(
-  function AsteroidsGame({ callbacks }, ref) {
+  function AsteroidsGame({ callbacks, skin = DEFAULT_SKIN }, ref) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const controllerRef = useRef<AsteroidsController | null>(null);
 
@@ -32,7 +34,7 @@ const AsteroidsGame = forwardRef<AsteroidsGameHandle, Props>(
 
     useEffect(() => {
       if (!canvasRef.current) return;
-      const controller = initAsteroids(canvasRef.current, callbacks);
+      const controller = initAsteroids(canvasRef.current, callbacks, skin);
       controllerRef.current = controller;
       return () => {
         controller.destroy();

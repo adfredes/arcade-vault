@@ -1,3 +1,5 @@
+import { DEFAULT_SKIN, TETRIS_SKINS, type SkinId } from '@/lib/games/skins';
+
 export interface TetrisCallbacks {
   onScoreChange: (score: number) => void;
   onLinesChange: (lines: number) => void;
@@ -17,6 +19,7 @@ export function initTetris(
   canvas: HTMLCanvasElement,
   callbacks: TetrisCallbacks,
   nextCanvas?: HTMLCanvasElement,
+  skin: SkinId = DEFAULT_SKIN,
 ): TetrisController {
   // ── Constantes ─────────────────────────────────────────────────────────────
 
@@ -24,17 +27,8 @@ export function initTetris(
   const ROWS = 20;
   const BLOCK = 30; // canvas 300×600
 
-  const COLORS = [
-    null,
-    '#4dd0e1', // I - cyan
-    '#ffd54f', // O - yellow
-    '#ba68c8', // T - purple
-    '#81c784', // S - green
-    '#e57373', // Z - red
-    '#90caf9', // J - pale blue
-    '#ffb74d', // L - orange
-    '#9e9e9e', // N - tuerca (gris metálico)
-  ];
+  // Palette driven by the active skin; classic = exact original colors.
+  const palette = TETRIS_SKINS[skin];
 
   const PIECES: (number[][] | null)[] = [
     null,
@@ -255,18 +249,24 @@ export function initTetris(
     alpha?: number,
   ) {
     if (!colorIndex) return;
-    const color = COLORS[colorIndex]!;
+    const color = palette.pieces[colorIndex]!;
     context.globalAlpha = alpha ?? 1;
+    // glow
+    if (palette.glow > 0 && (alpha === undefined || alpha > 0.5)) {
+      context.shadowBlur = palette.glow;
+      context.shadowColor = color;
+    }
     context.fillStyle = color;
     context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-    // highlight
-    context.fillStyle = 'rgba(255,255,255,0.12)';
+    // bevel highlight
+    context.shadowBlur = 0;
+    context.fillStyle = palette.highlight;
     context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
     context.globalAlpha = 1;
   }
 
   function drawGrid() {
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.strokeStyle = palette.grid;
     ctx.lineWidth = 0.5;
     for (let c = 1; c < COLS; c++) {
       ctx.beginPath();
@@ -283,7 +283,8 @@ export function initTetris(
   }
 
   function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = palette.bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     drawGrid();
 
     // board
@@ -301,7 +302,7 @@ export function initTetris(
             gy + r,
             current.shape[r][c],
             BLOCK,
-            0.2,
+            palette.ghostAlpha,
           );
 
     // current piece
@@ -320,7 +321,8 @@ export function initTetris(
   function drawNext() {
     if (!nextCtx || !nextCanvas) return;
     const NB = 30;
-    nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+    nextCtx.fillStyle = palette.bg;
+    nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
     const shape = next.shape;
     const offX = Math.floor((4 - shape[0].length) / 2);
     const offY = Math.floor((4 - shape.length) / 2);

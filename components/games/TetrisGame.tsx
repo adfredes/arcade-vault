@@ -6,6 +6,7 @@ import {
   TetrisCallbacks,
   TetrisController,
 } from '@/lib/games/tetris';
+import { DEFAULT_SKIN, type SkinId } from '@/lib/games/skins';
 
 export interface TetrisGameHandle {
   pause: () => void;
@@ -16,10 +17,12 @@ interface Props {
   callbacks: TetrisCallbacks;
   /** El padre renderiza este canvas en el HUD y pasa la ref aquí. */
   nextCanvasRef?: React.RefObject<HTMLCanvasElement | null>;
+  /** Skin activa; cambia vía remontaje por key en la play page. */
+  skin?: SkinId;
 }
 
 const TetrisGame = forwardRef<TetrisGameHandle, Props>(function TetrisGame(
-  { callbacks, nextCanvasRef },
+  { callbacks, nextCanvasRef, skin = DEFAULT_SKIN },
   ref,
 ) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -40,6 +43,7 @@ const TetrisGame = forwardRef<TetrisGameHandle, Props>(function TetrisGame(
       canvasRef.current,
       callbacks,
       nextCanvasRef?.current ?? undefined,
+      skin,
     );
     controllerRef.current = controller;
     return () => {

@@ -40,7 +40,13 @@ Leaderboard helpers live in `lib/supabase/queries.ts` (`getAllGames`, `getGame`,
 
 Per `README.md`, this project follows **Spec Driven Design** using the `/spec` and `/spec-impl` skills from `Klerith/fernando-skills`. Prefer writing/iterating a spec before implementation. Specs live in `specs/NN-<name>.md`.
 
+To decide **which** game to add next, use the project agent **`game-planner`** (`.claude/agents/game-planner.md`): it analyzes the current catalog, proposes the next game with justification, and keeps a persistent suggestions TODO at `references/game-suggetions-todo.md` (so it never re-suggests an idea). It writes only that memory file — no production code — and hands off to `/nuevo-juego`.
+
 To add a new game, use the project skill **`/nuevo-juego <source>`** (`.claude/skills/nuevo-juego/`): it inspects a vanilla `game.js` (from `references/started-games/`) and generates a `specs/NN-<id>-game.md` ready for `/spec-impl`. It writes only the spec — no production code.
+
+To explore variants of a **game you already chose**, use the project agent **`game-jam`** (`.claude/agents/game-jam.md`): given a provided game (name, brief description, or a `references/started-games/` folder) it generates 2-3 complete **alternative variant** specs (different mechanics/scoring/difficulty) under `specs/game-jam/<game-id>/`, in the style of `specs/07-09`, for you to review and pick one for `/spec-impl`. It does **not** pick the game. It writes only specs inside `specs/game-jam/` — no production code, no SQL.
+
+To add skins to an **already implemented game**, use the project agent **`skin-designer`** (`.claude/agents/skin-designer.md`): it works on **one game at a time** (the one you name) and gives it at least 3 skins — **neon, retro, and clásico (default)** — that look good in dark mode. Unlike the spec-only agents, it **edits production code**: it refactors that game's hardcoded colors into parametrizable palettes in `lib/games/skins.ts`, adds a global runtime `SkinSelector` (persisted in `localStorage`), verifies each skin visually with Playwright, and records the completed game in `references/game-with-theme.md`. It never touches game logic or games you didn't ask for.
 
 Always design UI with **`/frontend-design`**.
 

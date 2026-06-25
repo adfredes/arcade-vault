@@ -1,3 +1,5 @@
+import { SNAKE_SKINS, DEFAULT_SKIN, type SkinId } from '@/lib/games/skins';
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface SnakeCallbacks {
@@ -14,7 +16,11 @@ export interface SnakeController {
 export function initSnake(
   canvas: HTMLCanvasElement,
   callbacks: SnakeCallbacks,
+  skin: SkinId = DEFAULT_SKIN,
 ): SnakeController {
+  // Active color palette for this skin (classic = exact original colors).
+  const palette = SNAKE_SKINS[skin] ?? SNAKE_SKINS[DEFAULT_SKIN];
+
   // ── Sprite atlas (inline from references/source-assets/snake-assets/sprites.js) ──
   // Recorte { x, y, w, h } dentro de /snake/fruits.png (hoja 3790×442, fondo transparente).
 
@@ -191,9 +197,9 @@ export function initSnake(
   // ── Render ───────────────────────────────────────────────────────────────────
 
   function drawOverlay(message: string) {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.fillStyle = palette.overlayBg;
     ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = palette.overlayText;
     ctx.font = 'bold 64px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -202,11 +208,11 @@ export function initSnake(
 
   function draw() {
     // Fondo
-    ctx.fillStyle = '#0a0a12';
+    ctx.fillStyle = palette.bg;
     ctx.fillRect(0, 0, W, H);
 
     // Grilla sutil
-    ctx.strokeStyle = 'rgba(46, 194, 126, 0.06)';
+    ctx.strokeStyle = palette.grid;
     ctx.lineWidth = 1;
     for (let x = 0; x <= COLS; x++) {
       ctx.beginPath();
@@ -233,10 +239,16 @@ export function initSnake(
     }
 
     // Serpiente
+    ctx.shadowBlur = palette.glow;
     body.forEach((c, i) => {
-      ctx.fillStyle = i === 0 ? '#aef6c8' : '#2ec27e';
+      const color = i === 0 ? palette.snakeHead : palette.snakeBody;
+      ctx.fillStyle = color;
+      ctx.shadowColor = palette.glow ? color : 'transparent';
       ctx.fillRect(c.x * CELL + 1, c.y * CELL + 1, CELL - 2, CELL - 2);
     });
+    // Reset glow so it never bleeds into overlays/HUD text.
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
 
     if (paused) drawOverlay('PAUSA');
     if (dead) drawOverlay('GAME OVER');

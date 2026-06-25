@@ -1,3 +1,5 @@
+import { ASTEROIDS_SKINS, DEFAULT_SKIN, type SkinId } from '@/lib/games/skins';
+
 export interface AsteroidsCallbacks {
   onScoreChange: (score: number) => void;
   onLivesChange: (lives: number) => void;
@@ -14,10 +16,24 @@ export interface AsteroidsController {
 export function initAsteroids(
   canvas: HTMLCanvasElement,
   callbacks: AsteroidsCallbacks,
+  skin: SkinId = DEFAULT_SKIN,
 ): AsteroidsController {
   const ctx = canvas.getContext('2d')!;
   const W = 800;
   const H = 600;
+
+  const palette = ASTEROIDS_SKINS[skin] ?? ASTEROIDS_SKINS[DEFAULT_SKIN];
+
+  // Apply (or clear) the per-skin glow on stroked/filled vector art.
+  function glowOn(color: string) {
+    if (palette.glow > 0) {
+      ctx.shadowBlur = palette.glow;
+      ctx.shadowColor = color;
+    }
+  }
+  function glowOff() {
+    ctx.shadowBlur = 0;
+  }
 
   // ── Input ──────────────────────────────────────────────────────────────────
 
@@ -93,10 +109,12 @@ export function initAsteroids(
       if (this.ttl <= 0) this.dead = true;
     }
     draw() {
-      ctx.fillStyle = '#fff';
+      glowOn(palette.bullet);
+      ctx.fillStyle = palette.bullet;
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
       ctx.fill();
+      glowOff();
     }
   }
 
@@ -154,7 +172,8 @@ export function initAsteroids(
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(this.rot);
-      ctx.strokeStyle = '#fff';
+      glowOn(palette.asteroid);
+      ctx.strokeStyle = palette.asteroid;
       ctx.lineWidth = 1.5;
       ctx.lineJoin = 'round';
       ctx.beginPath();
@@ -163,6 +182,7 @@ export function initAsteroids(
         ctx.lineTo(this.verts[i][0], this.verts[i][1]);
       ctx.closePath();
       ctx.stroke();
+      glowOff();
       ctx.restore();
     }
   }
@@ -201,16 +221,18 @@ export function initAsteroids(
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(Math.PI / 4);
-      ctx.strokeStyle = '#0ff';
+      glowOn(palette.powerUp);
+      ctx.strokeStyle = palette.powerUp;
       ctx.lineWidth = 2;
       const r = this.radius * pulse;
       ctx.strokeRect(-r, -r, r * 2, r * 2);
       ctx.restore();
-      ctx.fillStyle = '#0ff';
+      ctx.fillStyle = palette.powerUp;
       ctx.font = 'bold 12px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('3x', this.x, this.y);
+      glowOff();
     }
   }
 
@@ -290,7 +312,8 @@ export function initAsteroids(
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(this.angle);
-      ctx.strokeStyle = '#fff';
+      glowOn(palette.ship);
+      ctx.strokeStyle = palette.ship;
       ctx.lineWidth = 1.5;
       ctx.lineJoin = 'round';
       ctx.beginPath();
@@ -305,9 +328,11 @@ export function initAsteroids(
         ctx.moveTo(-8, -4);
         ctx.lineTo(-8 - rand(6, 14), 0);
         ctx.lineTo(-8, 4);
-        ctx.strokeStyle = 'rgba(255, 130, 0, 0.85)';
+        ctx.strokeStyle = palette.thrust;
+        glowOn(palette.thrust);
         ctx.stroke();
       }
+      glowOff();
       ctx.restore();
     }
   }
@@ -342,7 +367,7 @@ export function initAsteroids(
     }
     draw() {
       const alpha = this.ttl / this.life;
-      ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(2)})`;
+      ctx.strokeStyle = `rgba(${palette.particle},${alpha.toFixed(2)})`;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(this.x, this.y);
@@ -512,7 +537,7 @@ export function initAsteroids(
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(-Math.PI / 2);
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = palette.hud;
     ctx.lineWidth = 1.2;
     ctx.lineJoin = 'round';
     ctx.beginPath();
@@ -526,7 +551,7 @@ export function initAsteroids(
   }
 
   function drawHUD() {
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = palette.hud;
     ctx.font = '15px monospace';
     ctx.textAlign = 'left';
     ctx.fillText(`SCORE  ${score}`, 14, 26);
@@ -535,13 +560,13 @@ export function initAsteroids(
     for (let i = 0; i < lives; i++) drawLifeIcon(W - 16 - i * 22, 18);
     if (ship.tripleShot > 0) {
       ctx.textAlign = 'left';
-      ctx.fillStyle = '#0ff';
+      ctx.fillStyle = palette.hudAccent;
       ctx.fillText(`3x  ${ship.tripleShot.toFixed(1)}s`, 14, 46);
     }
   }
 
   function draw() {
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = palette.bg;
     ctx.fillRect(0, 0, W, H);
     particles.forEach((p) => p.draw());
     asteroids.forEach((a) => a.draw());
