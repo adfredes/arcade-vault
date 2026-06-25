@@ -6,7 +6,17 @@ import { useUser } from '@/context/UserContext';
 import SnakeGame, { SnakeGameHandle } from '@/components/games/SnakeGame';
 import { SnakeCallbacks } from '@/lib/games/snake';
 import SkinSelector, { useSkin } from '@/components/games/SkinSelector';
+import VirtualGamepad, {
+  type GamepadConfig,
+} from '@/components/games/VirtualGamepad';
 import { saveScore } from '@/lib/supabase/saveScore';
+
+const SNAKE_CONFIG: GamepadConfig = {
+  dpadUp: 'ArrowUp',
+  dpadDown: 'ArrowDown',
+  dpadLeft: 'ArrowLeft',
+  dpadRight: 'ArrowRight',
+};
 
 export default function SnakePlayPage() {
   const router = useRouter();
@@ -65,7 +75,7 @@ export default function SnakePlayPage() {
 
   return (
     <div className="av-player fade-in">
-      <div className="player-hud">
+      <div className="player-hud hidden md:flex">
         <div
           style={{
             display: 'flex',
@@ -124,6 +134,16 @@ export default function SnakePlayPage() {
           <span>SNAKE · CRT-83 · 60 HZ</span>
           <span>CARGA · 1MB</span>
         </div>
+      </div>
+
+      <VirtualGamepad config={SNAKE_CONFIG} />
+
+      {/* Mobile footer: PAUSA + SkinSelector */}
+      <div className="flex md:hidden items-center justify-center gap-4 px-4 py-3 flex-wrap">
+        <button className="btn yellow" onClick={togglePause} disabled={over}>
+          {paused ? 'REANUDAR' : 'PAUSA'}
+        </button>
+        <SkinSelector value={skin} onChange={setSkin} disabled={paused} />
       </div>
 
       {over && (

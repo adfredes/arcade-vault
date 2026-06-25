@@ -7,6 +7,19 @@ import TetrisGame, { TetrisGameHandle } from '@/components/games/TetrisGame';
 import { TetrisCallbacks } from '@/lib/games/tetris';
 import { saveScore } from '@/lib/supabase/saveScore';
 import SkinSelector, { useSkin } from '@/components/games/SkinSelector';
+import VirtualGamepad, {
+  type GamepadConfig,
+} from '@/components/games/VirtualGamepad';
+
+const TETRIS_CONFIG: GamepadConfig = {
+  dpadDown: 'ArrowDown',
+  dpadLeft: 'ArrowLeft',
+  dpadRight: 'ArrowRight',
+  buttonA: 'ArrowUp',
+  buttonALabel: 'ROTAR',
+  buttonB: ' ',
+  buttonBLabel: 'DROP',
+};
 
 export default function TetrisPlayPage() {
   const router = useRouter();
@@ -73,7 +86,7 @@ export default function TetrisPlayPage() {
 
   return (
     <div className="av-player fade-in">
-      <div className="player-hud">
+      <div className="player-hud hidden md:flex">
         <div
           style={{
             display: 'flex',
@@ -205,6 +218,16 @@ export default function TetrisPlayPage() {
           <span>TETRIS · CRT-83 · 60 HZ</span>
           <span>CARGA · 1MB</span>
         </div>
+      </div>
+
+      <VirtualGamepad config={TETRIS_CONFIG} />
+
+      {/* Mobile footer: PAUSA + SkinSelector */}
+      <div className="flex md:hidden items-center justify-center gap-4 px-4 py-3 flex-wrap">
+        <button className="btn yellow" onClick={togglePause} disabled={over}>
+          {paused ? 'REANUDAR' : 'PAUSA'}
+        </button>
+        <SkinSelector value={skin} onChange={setSkin} disabled={over} />
       </div>
 
       {over && (

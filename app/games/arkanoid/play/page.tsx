@@ -8,7 +8,15 @@ import ArkanoidGame, {
 } from '@/components/games/ArkanoidGame';
 import { ArkanoidCallbacks } from '@/lib/games/arkanoid';
 import SkinSelector, { useSkin } from '@/components/games/SkinSelector';
+import VirtualGamepad, {
+  type GamepadConfig,
+} from '@/components/games/VirtualGamepad';
 import { saveScore } from '@/lib/supabase/saveScore';
+
+const ARKANOID_CONFIG: GamepadConfig = {
+  dpadLeft: 'ArrowLeft',
+  dpadRight: 'ArrowRight',
+};
 
 export default function ArkanoidPlayPage() {
   const router = useRouter();
@@ -73,7 +81,7 @@ export default function ArkanoidPlayPage() {
 
   return (
     <div className="av-player fade-in">
-      <div className="player-hud">
+      <div className="player-hud hidden md:flex">
         <div
           style={{
             display: 'flex',
@@ -140,6 +148,16 @@ export default function ArkanoidPlayPage() {
           <span>ARKANOID · CRT-83 · 60 HZ</span>
           <span>CARGA · 1MB</span>
         </div>
+      </div>
+
+      <VirtualGamepad config={ARKANOID_CONFIG} />
+
+      {/* Mobile footer: PAUSA + SkinSelector */}
+      <div className="flex md:hidden items-center justify-center gap-4 px-4 py-3 flex-wrap">
+        <button className="btn yellow" onClick={togglePause} disabled={over}>
+          {paused ? 'REANUDAR' : 'PAUSA'}
+        </button>
+        <SkinSelector value={skin} onChange={setSkin} disabled={paused} />
       </div>
 
       {over && (

@@ -47,7 +47,7 @@ const AsteroidsGame = forwardRef<AsteroidsGameHandle, Props>(
         ref={canvasRef}
         width={800}
         height={600}
-        style={{ display: 'block', maxWidth: '100%' }}
+        style={{ display: 'block', width: '100%', height: 'auto' }}
       />
     );
   },

@@ -57,7 +57,7 @@ const TetrisGame = forwardRef<TetrisGameHandle, Props>(function TetrisGame(
       ref={canvasRef}
       width={300}
       height={600}
-      style={{ display: 'block', maxWidth: '100%' }}
+      style={{ display: 'block', width: '100%', height: 'auto' }}
     />
   );
 });
