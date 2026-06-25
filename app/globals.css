@@ -1628,6 +1628,28 @@ a {
   }
 }
 
+/* ===== virtual gamepad — landscape compact mode ===== */
+@media (orientation: landscape) and (pointer: coarse) {
+  /* Shrink canvas so it fits without scrolling */
+  .crt-screen canvas {
+    max-height: 45vh;
+    width: auto !important;
+  }
+
+  /* Tighter gamepad layout */
+  .virtual-gamepad {
+    gap: 1rem;
+    padding-block: 4px;
+  }
+
+  /* Smaller D-pad and action buttons */
+  .virtual-gamepad button {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 0.875rem;
+  }
+}
+
 /* ===== skin selector (game shell) ===== */
 .skin-selector {
   display: flex;
