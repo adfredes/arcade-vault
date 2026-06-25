@@ -10,7 +10,7 @@ El sistema base vive en `lib/games/skins.ts` y el selector global en `components
 | Juego      | classic | retro | neon | Skins extra | Dark-mode revisado | Última actualización |
 | ---------- | ------- | ----- | ---- | ----------- | ------------------ | -------------------- |
 | asteroides | ✅      | ✅    | ✅   | –           | sí                 | 2026-06-24           |
-| tetris     | –       | –     | –    | –           | –                  | –                    |
+| tetris     | ✅      | ✅    | ✅   | –           | sí                 | 2026-06-24           |
 | arkanoid   | ✅      | ✅    | ✅   | –           | sí                 | 2026-06-24           |
 | snake      | ✅      | ✅    | ✅   | –           | parcial            | 2026-06-24           |
 

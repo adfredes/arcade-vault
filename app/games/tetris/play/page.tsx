@@ -6,6 +6,7 @@ import { useUser } from '@/context/UserContext';
 import TetrisGame, { TetrisGameHandle } from '@/components/games/TetrisGame';
 import { TetrisCallbacks } from '@/lib/games/tetris';
 import { saveScore } from '@/lib/supabase/saveScore';
+import SkinSelector, { useSkin } from '@/components/games/SkinSelector';
 
 export default function TetrisPlayPage() {
   const router = useRouter();
@@ -24,6 +25,7 @@ export default function TetrisPlayPage() {
 
   const gameRef = useRef<TetrisGameHandle>(null);
   const nextCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [skin, setSkin] = useSkin();
 
   const callbacks: TetrisCallbacks = {
     onScoreChange: useCallback((s: number) => setScore(s), []),
@@ -101,6 +103,7 @@ export default function TetrisPlayPage() {
         </div>
 
         <div className="hud-actions">
+          <SkinSelector value={skin} onChange={setSkin} disabled={over} />
           <button className="btn yellow" onClick={togglePause} disabled={over}>
             {paused ? 'REANUDAR' : 'PAUSA'}
           </button>
@@ -126,10 +129,11 @@ export default function TetrisPlayPage() {
           {/* Tablero centrado + preview a la derecha, como unidad */}
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 0 }}>
             <TetrisGame
-              key={gameKey}
+              key={`${gameKey}-${skin}`}
               ref={gameRef}
               callbacks={callbacks}
               nextCanvasRef={nextCanvasRef}
+              skin={skin}
             />
 
             {/* Preview NEXT — a la derecha del tablero, dentro del CRT */}

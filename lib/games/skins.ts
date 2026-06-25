@@ -135,6 +135,101 @@ export const SNAKE_SKINS: Record<SkinId, SnakePalette> = {
   },
 };
 
+// ── Tetris ────────────────────────────────────────────────────────────────
+
+export interface TetrisPalette {
+  /** Canvas background fill. */
+  bg: string;
+  /** Subtle grid lines (full rgba string). */
+  grid: string;
+  /**
+   * Colors for each piece type, indexed by type id (1–8). Index 0 is null
+   * (empty cell). This is a tuple with a leading null to keep type ids aligned.
+   */
+  pieces: [
+    null,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+  ];
+  /** Top-edge highlight painted over each block to give a bevel effect. */
+  highlight: string;
+  /** Ghost piece alpha (0–1). */
+  ghostAlpha: number;
+  /** Glow radius (shadowBlur) on blocks. 0 disables glow (classic). */
+  glow: number;
+  /** Glow color (shadowColor). Empty string when glow is 0. */
+  glowColor: string;
+}
+
+export const TETRIS_SKINS: Record<SkinId, TetrisPalette> = {
+  // Exact replica of the original hardcoded colors. Default; never changes.
+  classic: {
+    bg: '#000',
+    grid: 'rgba(255,255,255,0.06)',
+    pieces: [
+      null,
+      '#4dd0e1', // I - cyan
+      '#ffd54f', // O - yellow
+      '#ba68c8', // T - purple
+      '#81c784', // S - green
+      '#e57373', // Z - red
+      '#90caf9', // J - pale blue
+      '#ffb74d', // L - orange
+      '#9e9e9e', // N - tuerca (gris metálico)
+    ],
+    highlight: 'rgba(255,255,255,0.12)',
+    ghostAlpha: 0.2,
+    glow: 0,
+    glowColor: '',
+  },
+  // Saturated, vibrant, aligned to the site CSS tokens, with glow.
+  neon: {
+    bg: '#0a0a0f', // --bg
+    grid: 'rgba(0,245,255,0.05)', // --cyan, faint
+    pieces: [
+      null,
+      '#00f5ff', // I - --cyan
+      '#f5ff00', // O - --yellow
+      '#ff006e', // T - --magenta
+      '#00ff88', // S - --green
+      '#ff4d6d', // Z - hot pink-red
+      '#7b61ff', // J - electric violet
+      '#ff9500', // L - vivid orange
+      '#8a8fb5', // N - --ink-dim (silver)
+    ],
+    highlight: 'rgba(255,255,255,0.18)',
+    ghostAlpha: 0.18,
+    glow: 10,
+    glowColor: '#00f5ff', // --cyan
+  },
+  // CRT / phosphor: amber and phosphor-green palette, warm dark backdrop.
+  retro: {
+    bg: '#0b0900',
+    grid: 'rgba(255,176,0,0.07)', // amber phosphor grid
+    pieces: [
+      null,
+      '#39ff14', // I - phosphor green
+      '#ffb000', // O - amber
+      '#ff6b35', // T - phosphor orange
+      '#9bff6a', // S - pale phosphor green
+      '#ff3d3d', // Z - phosphor red
+      '#ffd27a', // J - warm amber
+      '#ffcf3a', // L - gold
+      '#8fa88f', // N - desaturated phosphor
+    ],
+    highlight: 'rgba(255,220,120,0.14)',
+    ghostAlpha: 0.2,
+    glow: 6,
+    glowColor: '#ffb000', // amber phosphor
+  },
+};
+
 // ── Arkanoid ───────────────────────────────────────────────────────────────
 // Arkanoid renders its paddle/ball/blocks from a spritesheet PNG, so the only
 // programmable colors are the playfield background, the glow cast around the
