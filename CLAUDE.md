@@ -48,6 +48,8 @@ To explore variants of a **game you already chose**, use the project agent **`ga
 
 To add skins to an **already implemented game**, use the project agent **`skin-designer`** (`.claude/agents/skin-designer.md`): it works on **one game at a time** (the one you name) and gives it at least 3 skins — **neon, retro, and clásico (default)** — that look good in dark mode. Unlike the spec-only agents, it **edits production code**: it refactors that game's hardcoded colors into parametrizable palettes in `lib/games/skins.ts`, adds a global runtime `SkinSelector` (persisted in `localStorage`), verifies each skin visually with Playwright, and records the completed game in `references/game-with-theme.md`. It never touches game logic or games you didn't ask for.
 
+To make an **already implemented game** playable on mobile, use the project agent **`mobile-porter`** (`.claude/agents/mobile-porter.md`): it works on **one game at a time** (the one you name, typically a newly added one) and ports it to mobile following the canonical pattern of `specs/10-mobile-touch-controls.md` — `VirtualGamepad` (D-pad + A/B with a `GamepadConfig` mapped to the game's real keys), HUD hidden on mobile (`hidden md:flex`), CSS-scaled canvas, mobile footer with PAUSA + `SkinSelector` (`flex md:hidden`), and portrait/landscape support. It **edits production code** but only that game's play page (`app/games/<id>/play/page.tsx`) and `*Game.tsx`; it reads `lib/games/<id>.ts` solely to map keys and never touches game logic. It verifies on mobile viewports with Playwright and records the completed game in `references/mobile-ported.md`. It works **only on games' play pages** — never the rest of the site.
+
 Always design UI with **`/frontend-design`**.
 
 ### Tooling
