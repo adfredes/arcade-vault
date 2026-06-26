@@ -16,9 +16,7 @@ const TETRIS_CONFIG: GamepadConfig = {
   dpadLeft: 'ArrowLeft',
   dpadRight: 'ArrowRight',
   buttonA: 'ArrowUp',
-  buttonALabel: 'ROTAR',
   buttonB: ' ',
-  buttonBLabel: 'DROP',
 };
 
 export default function TetrisPlayPage() {

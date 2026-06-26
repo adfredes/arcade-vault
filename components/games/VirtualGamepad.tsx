@@ -7,10 +7,24 @@ export interface GamepadConfig {
   dpadDown?: string;
   dpadLeft?: string;
   dpadRight?: string;
-  buttonA?: string;
-  buttonALabel?: string;
-  buttonB?: string;
-  buttonBLabel?: string;
+  buttonA?: string; // key code despachado por el botón A (magenta, derecha)
+  buttonB?: string; // key code despachado por el botón B (cian, izquierda)
+}
+
+// SVG arrow paths (triangular), one per cardinal direction
+const ARROW_PATHS = {
+  up: 'M12 4 L20 16 L4 16 Z',
+  right: 'M8 4 L20 12 L8 20 Z',
+  down: 'M4 8 L20 8 L12 20 Z',
+  left: 'M16 4 L16 20 L4 12 Z',
+} as const;
+
+function DpadArrow({ dir }: { dir: keyof typeof ARROW_PATHS }) {
+  return (
+    <svg className="dp-arrow" viewBox="0 0 24 24" aria-hidden="true">
+      <path d={ARROW_PATHS[dir]} fill="currentColor" />
+    </svg>
+  );
 }
 
 interface Props {
@@ -29,12 +43,6 @@ function dispatchKey(type: 'keydown' | 'keyup', key: string) {
   const code = KEY_TO_CODE[key] ?? key;
   window.dispatchEvent(new KeyboardEvent(type, { key, code, bubbles: true }));
 }
-
-const dpadBtn =
-  'flex items-center justify-center w-12 h-12 rounded text-lg bg-black/50 border border-[var(--ink-faint)] text-[var(--ink)] active:bg-black/70 touch-none select-none';
-
-const actionBtn =
-  'flex items-center justify-center w-14 h-14 rounded-full bg-black/50 border border-[var(--ink-dim)] text-[var(--ink)] text-[11px] font-bold tracking-wide active:bg-black/70 touch-none select-none';
 
 export default function VirtualGamepad({ config }: Props) {
   const intervals = useRef(new Map<string, ReturnType<typeof setInterval>>());
@@ -76,73 +84,89 @@ export default function VirtualGamepad({ config }: Props) {
 
   return (
     <div
-      className="virtual-gamepad hidden [@media(pointer:coarse)]:flex items-center justify-center gap-8 px-4 py-3"
+      className="virtual-gamepad hidden [@media(pointer:coarse)]:flex items-center justify-center px-4 py-3"
       style={{
         touchAction: 'none',
         userSelect: 'none',
         WebkitUserSelect: 'none',
       }}
     >
-      {/* D-pad: 3×3 grid, arrows at cardinal positions */}
-      <div
-        className="grid gap-1"
-        style={{
-          gridTemplateColumns: 'repeat(3, 3rem)',
-          gridTemplateRows: 'repeat(3, 3rem)',
-        }}
-      >
-        <span />
-        {config.dpadUp ? (
-          <button className={dpadBtn} {...handlers(config.dpadUp)}>
-            ▲
-          </button>
-        ) : (
-          <span />
-        )}
-        <span />
+      <div className="gp" role="group" aria-label="Gamepad">
+        <div className="gp-body">
+          {/* Left column: D-pad with SVG arrows + pulsing hub gem */}
+          <div className="gp-col gp-col-left">
+            <div className="gp-dpad" aria-label="D-pad">
+              {config.dpadUp && (
+                <button
+                  className="dp dp-up"
+                  aria-label="up"
+                  {...handlers(config.dpadUp)}
+                >
+                  <DpadArrow dir="up" />
+                </button>
+              )}
+              {config.dpadRight && (
+                <button
+                  className="dp dp-right"
+                  aria-label="right"
+                  {...handlers(config.dpadRight)}
+                >
+                  <DpadArrow dir="right" />
+                </button>
+              )}
+              {config.dpadDown && (
+                <button
+                  className="dp dp-down"
+                  aria-label="down"
+                  {...handlers(config.dpadDown)}
+                >
+                  <DpadArrow dir="down" />
+                </button>
+              )}
+              {config.dpadLeft && (
+                <button
+                  className="dp dp-left"
+                  aria-label="left"
+                  {...handlers(config.dpadLeft)}
+                >
+                  <DpadArrow dir="left" />
+                </button>
+              )}
+              <div className="dp-hub" aria-hidden="true">
+                <span className="dp-hub-gem" />
+              </div>
+            </div>
+          </div>
 
-        {config.dpadLeft ? (
-          <button className={dpadBtn} {...handlers(config.dpadLeft)}>
-            ◀
-          </button>
-        ) : (
-          <span />
-        )}
-        <div className="rounded bg-black/30 border border-[var(--ink-faint)]" />
-        {config.dpadRight ? (
-          <button className={dpadBtn} {...handlers(config.dpadRight)}>
-            ▶
-          </button>
-        ) : (
-          <span />
-        )}
-
-        <span />
-        {config.dpadDown ? (
-          <button className={dpadBtn} {...handlers(config.dpadDown)}>
-            ▼
-          </button>
-        ) : (
-          <span />
-        )}
-        <span />
-      </div>
-
-      {/* Action buttons A / B */}
-      {hasActions && (
-        <div className="flex flex-col gap-3 items-center justify-center">
-          {config.buttonA && (
-            <button className={actionBtn} {...handlers(config.buttonA)}>
-              {config.buttonALabel ?? 'A'}
-            </button>
-          )}
-          {config.buttonB && (
-            <button className={actionBtn} {...handlers(config.buttonB)}>
-              {config.buttonBLabel ?? 'B'}
-            </button>
-          )}
+          {/* Right column: A/B action buttons (B cyan left, A magenta right) */}
+          <div className="gp-col gp-col-right">
+            {hasActions && (
+              <div className="gp-actions">
+                {config.buttonB && (
+                  <button
+                    className="ab b"
+                    aria-label="B"
+                    {...handlers(config.buttonB)}
+                  >
+                    <span className="ab-ring" />
+                    <span className="ab-letter">B</span>
+                  </button>
+                )}
+                {config.buttonA && (
+                  <button
+                    className="ab a"
+                    aria-label="A"
+                    {...handlers(config.buttonA)}
+                  >
+                    <span className="ab-ring" />
+                    <span className="ab-letter">A</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

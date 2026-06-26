@@ -1636,17 +1636,360 @@ a {
     width: auto !important;
   }
 
-  /* Tighter gamepad layout */
+  /* Tighter gamepad shell so it fits without scrolling */
   .virtual-gamepad {
-    gap: 1rem;
     padding-block: 4px;
   }
+  .gp {
+    padding: 10px 16px 8px;
+  }
+  .gp-body {
+    gap: 12px;
+    padding: 12px 6px;
+  }
+  .gp-dpad {
+    width: 132px;
+    height: 132px;
+  }
+  .dp {
+    width: 42px;
+    height: 42px;
+  }
+  .dp-up,
+  .dp-down {
+    left: 45px;
+  }
+  .dp-left,
+  .dp-right {
+    top: 45px;
+  }
+  .dp-hub {
+    top: 45px;
+    left: 45px;
+    width: 42px;
+    height: 42px;
+  }
+  .ab {
+    width: 58px;
+    height: 58px;
+  }
+  .gp-actions {
+    gap: 14px;
+  }
+}
 
-  /* Smaller D-pad and action buttons */
-  .virtual-gamepad button {
-    width: 2.25rem;
-    height: 2.25rem;
-    font-size: 0.875rem;
+/* ===== virtual gamepad — neon shell (mirrors references/gamepad-assets) ===== */
+.gp {
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  padding: 16px 22px 14px;
+  background: linear-gradient(180deg, var(--bg-3) 0%, var(--bg) 100%);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow:
+    0 30px 80px -30px rgba(0, 245, 255, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.6);
+}
+.gp::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid color-mix(in srgb, var(--cyan) 14%, transparent);
+  border-radius: 18px;
+  pointer-events: none;
+}
+.gp::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px
+  );
+  background-size: 8px 8px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.gp-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: center;
+  padding: 24px 12px;
+  position: relative;
+  z-index: 1;
+}
+.gp-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.gp-col-left {
+  justify-self: start;
+}
+.gp-col-right {
+  justify-self: end;
+}
+
+/* D-pad */
+.gp-dpad {
+  position: relative;
+  width: 156px;
+  height: 156px;
+}
+.dp {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(180deg, var(--bg-3), var(--bg));
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  color: var(--ink-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow:
+    0 4px 0 #050507,
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6);
+  transition:
+    transform 80ms,
+    box-shadow 140ms,
+    color 140ms,
+    border-color 140ms,
+    background 140ms;
+}
+.dp .dp-arrow {
+  width: 22px;
+  height: 22px;
+  transition: filter 140ms;
+}
+.dp:hover {
+  color: var(--cyan);
+  border-color: color-mix(in srgb, var(--cyan) 35%, transparent);
+}
+.dp.on,
+.dp:active {
+  transform: translateY(3px);
+  color: var(--cyan);
+  background: linear-gradient(180deg, #08161e, #030a0e);
+  border-color: var(--cyan);
+  box-shadow:
+    0 1px 0 #050507,
+    inset 0 0 16px rgba(0, 245, 255, 0.45),
+    0 0 16px rgba(0, 245, 255, 0.5);
+}
+.dp.on .dp-arrow,
+.dp:active .dp-arrow {
+  filter: drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 0 12px var(--cyan));
+}
+.dp-up {
+  top: 0;
+  left: 53px;
+}
+.dp-down {
+  bottom: 0;
+  left: 53px;
+}
+.dp-left {
+  left: 0;
+  top: 53px;
+}
+.dp-right {
+  right: 0;
+  top: 53px;
+}
+
+.dp-hub {
+  position: absolute;
+  top: 53px;
+  left: 53px;
+  width: 50px;
+  height: 50px;
+  background: radial-gradient(circle at 50% 50%, var(--bg-3) 0%, var(--bg) 80%);
+  border: 1px solid color-mix(in srgb, var(--cyan) 15%, transparent);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 12px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.dp-hub-gem {
+  width: 12px;
+  height: 12px;
+  background: var(--cyan);
+  box-shadow:
+    0 0 10px var(--cyan),
+    inset 0 0 4px rgba(0, 0, 0, 0.5);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  animation: pulse-led 2s ease-in-out infinite;
+}
+@keyframes pulse-led {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+}
+
+/* A/B action buttons */
+.gp-actions {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 22px;
+  justify-items: center;
+  align-items: center;
+}
+.ab {
+  position: relative;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  background:
+    radial-gradient(
+      circle at 32% 26%,
+      rgba(255, 255, 255, 0.25),
+      transparent 50%
+    ),
+    radial-gradient(circle at 50% 55%, var(--ab-mid), var(--ab-deep) 75%);
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow:
+    0 6px 0 #050507,
+    0 0 22px var(--ab-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.4);
+  transition:
+    transform 80ms,
+    box-shadow 140ms;
+}
+.ab.a {
+  color: var(--magenta);
+  /* fallback rgba (asset values), then derived from --magenta where supported */
+  --ab-mid: rgba(255, 0, 110, 0.7);
+  --ab-mid: color-mix(in srgb, var(--magenta) 70%, transparent);
+  --ab-deep: rgba(110, 0, 40, 0.95);
+  --ab-deep: color-mix(in srgb, var(--magenta) 35%, var(--bg));
+  --ab-glow: rgba(255, 0, 110, 0.4);
+  --ab-glow: color-mix(in srgb, var(--magenta) 40%, transparent);
+}
+.ab.b {
+  color: var(--cyan);
+  --ab-mid: rgba(0, 200, 230, 0.7);
+  --ab-mid: color-mix(in srgb, var(--cyan) 70%, transparent);
+  --ab-deep: rgba(0, 50, 70, 0.95);
+  --ab-deep: color-mix(in srgb, var(--cyan) 28%, var(--bg));
+  --ab-glow: rgba(0, 245, 255, 0.4);
+  --ab-glow: color-mix(in srgb, var(--cyan) 40%, transparent);
+}
+.ab .ab-letter {
+  font-family: var(--pixel);
+  font-size: 22px;
+  color: #fff;
+  letter-spacing: 0.02em;
+  position: relative;
+  z-index: 2;
+}
+.ab.a .ab-letter {
+  text-shadow:
+    0 0 8px var(--magenta),
+    0 0 18px var(--magenta),
+    0 1px 0 rgba(0, 0, 0, 0.6);
+}
+.ab.b .ab-letter {
+  text-shadow:
+    0 0 8px var(--cyan),
+    0 0 18px var(--cyan),
+    0 1px 0 rgba(0, 0, 0, 0.6);
+}
+.ab .ab-ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1px dashed currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 140ms,
+    transform 200ms;
+}
+.ab:hover .ab-ring {
+  opacity: 0.45;
+}
+.ab.on,
+.ab:active {
+  transform: translateY(4px) scale(0.97);
+  box-shadow:
+    0 1px 0 #050507,
+    0 0 36px var(--ab-glow),
+    inset 0 0 18px rgba(0, 0, 0, 0.5);
+}
+.ab.on .ab-ring,
+.ab:active .ab-ring {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+/* Compact sizing for narrow phones */
+@media (max-width: 620px) {
+  .gp {
+    padding: 12px 14px 10px;
+    border-radius: 16px;
+  }
+  .gp-body {
+    gap: 14px;
+    padding: 18px 6px;
+  }
+  .gp-dpad {
+    width: 144px;
+    height: 144px;
+  }
+  .dp {
+    width: 46px;
+    height: 46px;
+    border-radius: 8px;
+  }
+  .dp-up,
+  .dp-down {
+    left: 49px;
+  }
+  .dp-left,
+  .dp-right {
+    top: 49px;
+  }
+  .dp-hub {
+    top: 49px;
+    left: 49px;
+    width: 46px;
+    height: 46px;
+  }
+  .ab {
+    width: 64px;
+    height: 64px;
+  }
+  .gp-actions {
+    gap: 16px;
   }
 }
 

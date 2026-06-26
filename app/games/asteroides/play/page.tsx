@@ -18,9 +18,7 @@ const ASTEROIDES_CONFIG: GamepadConfig = {
   dpadLeft: 'ArrowLeft',
   dpadRight: 'ArrowRight',
   buttonA: ' ',
-  buttonALabel: 'FIRE',
   buttonB: 'Shift',
-  buttonBLabel: 'HYPER',
 };
 
 export default function AsteroidsPlayPage() {
