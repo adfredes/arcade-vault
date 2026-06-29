@@ -4,6 +4,17 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
+// Solo para el registro: ≥8 caracteres con minúscula, mayúscula, dígito y símbolo.
+const STRONG_PASSWORD =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+
+function isStrongPassword(pass: string): boolean {
+  return STRONG_PASSWORD.test(pass);
+}
+
+const PASSWORD_HINT =
+  'Mínimo 8 caracteres e incluir mayúscula, minúscula, número y símbolo.';
+
 function friendlyError(message: string): string {
   const m = message.toLowerCase();
   if (m.includes('invalid login credentials'))
@@ -45,6 +56,10 @@ export default function AuthPage() {
         router.push('/');
         router.refresh();
       } else {
+        if (!isStrongPassword(pass)) {
+          setError(`La contraseña debe tener ${PASSWORD_HINT.toLowerCase()}`);
+          return;
+        }
         const displayName = (username || 'PLAYER1').toUpperCase().slice(0, 10);
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -206,6 +221,19 @@ export default function AuthPage() {
               onChange={(e) => setPass(e.target.value)}
               placeholder="••••••••"
             />
+            {tab === 'up' && (
+              <div
+                className="mono"
+                style={{
+                  fontSize: 11,
+                  color: 'var(--ink-faint)',
+                  letterSpacing: '0.04em',
+                  marginTop: 6,
+                }}
+              >
+                {PASSWORD_HINT}
+              </div>
+            )}
           </div>
 
           {error && <div className="auth-error">{error}</div>}
