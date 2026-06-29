@@ -281,3 +281,184 @@ export const ARKANOID_SKINS: Record<SkinId, ArkanoidPalette> = {
     text: '#ffd27a', // warm amber
   },
 };
+
+// ── Frogger ──────────────────────────────────────────────────────────────────
+// Frogger draws everything procedurally (no spritesheet): zone backgrounds,
+// vehicles, river objects, the frog and an internal HUD. The palette covers each
+// of those families plus an optional glow (shadowBlur/shadowColor) used by neon
+// and retro to make the entities "vibrate" on the dark CRT shell.
+
+export interface FroggerPalette {
+  /** Top goals strip background. */
+  goalsRow: string;
+  /** River band background. */
+  river: string;
+  /** Safe rows (mid island + start). */
+  safe: string;
+  /** Road band background. */
+  road: string;
+  /** Dashed lane divider lines (full rgba string). */
+  laneLine: string;
+  /** Goal mouth (lily-pad slot) background. */
+  goalMouth: string;
+  /** Goal mouth border. */
+  goalBorder: string;
+  /** Frog placed inside a completed goal. */
+  goalFrog: string;
+  /** The four cycling car body colors. */
+  cars: [string, string, string, string];
+  /** Car windshield (full rgba string). */
+  windshield: string;
+  /** Vehicle wheels. */
+  wheel: string;
+  /** Truck trailer body. */
+  truckTrailer: string;
+  /** Truck cab. */
+  truckCab: string;
+  /** Log body. */
+  log: string;
+  /** Log grain lines (stroke, full rgba string). */
+  logGrain: string;
+  /** Log end-ring. */
+  logRing: string;
+  /** Turtle skin/body. */
+  turtleBody: string;
+  /** Turtle shell. */
+  turtleShell: string;
+  /** Submerged turtle ripple stroke (full rgba string). */
+  turtleSubmerged: string;
+  /** Frog body. */
+  frogBody: string;
+  /** Frog legs. */
+  frogLegs: string;
+  /** Frog eye whites. */
+  frogEye: string;
+  /** Frog pupils. */
+  frogPupil: string;
+  /** HUD score text. */
+  hudScore: string;
+  /** HUD level text + life icon body. */
+  hudLevel: string;
+  /** HUD life icon body. */
+  hudLife: string;
+  /** HUD life icon eyes. */
+  hudLifeEye: string;
+  /** Time bar fill > 50%. */
+  timeBarHigh: string;
+  /** Time bar fill 25–50%. */
+  timeBarMid: string;
+  /** Time bar fill < 25%. */
+  timeBarLow: string;
+  /** Time bar track background (full rgba string). */
+  timeBarBg: string;
+  /** Glow radius (shadowBlur) on entities. 0 disables glow (classic). */
+  glow: number;
+}
+
+export const FROGGER_SKINS: Record<SkinId, FroggerPalette> = {
+  // Exact replica of the original hardcoded colors. Default; never changes.
+  classic: {
+    goalsRow: '#0a3a1a',
+    river: '#0a3a5c',
+    safe: '#13361f',
+    road: '#1a1a1f',
+    laneLine: 'rgba(255,255,255,0.18)',
+    goalMouth: '#06280f',
+    goalBorder: '#d4af37',
+    goalFrog: '#3bbf3b',
+    cars: ['#e23b3b', '#f5c518', '#3b7de2', '#d23bd2'],
+    windshield: 'rgba(180,230,255,0.8)',
+    wheel: '#111',
+    truckTrailer: '#9aa0a6',
+    truckCab: '#d23b3b',
+    log: '#7a4a23',
+    logGrain: 'rgba(60,32,12,0.7)',
+    logRing: '#5c3417',
+    turtleBody: '#2faa57',
+    turtleShell: '#1d7a3c',
+    turtleSubmerged: 'rgba(120,220,160,0.45)',
+    frogBody: '#7CFC00',
+    frogLegs: '#5bbf00',
+    frogEye: '#fff',
+    frogPupil: '#111',
+    hudScore: '#fff',
+    hudLevel: '#7CFC00',
+    hudLife: '#7CFC00',
+    hudLifeEye: '#fff',
+    timeBarHigh: '#3bd46a',
+    timeBarMid: '#f5c518',
+    timeBarLow: '#e23b3b',
+    timeBarBg: 'rgba(0,0,0,0.5)',
+    glow: 0,
+  },
+  // Saturated, vibrant, aligned to the site CSS tokens, with glow.
+  neon: {
+    goalsRow: '#0a1a14',
+    river: '#04122a', // deep electric blue
+    safe: '#0a1410',
+    road: '#0a0a0f', // --bg
+    laneLine: 'rgba(0,245,255,0.28)', // --cyan dashes
+    goalMouth: '#06121a',
+    goalBorder: '#f5ff00', // --yellow
+    goalFrog: '#00ff88', // --green
+    cars: ['#ff006e', '#f5ff00', '#00f5ff', '#ff5cc8'], // magenta/yellow/cyan/pink
+    windshield: 'rgba(0,245,255,0.7)',
+    wheel: '#15151f',
+    truckTrailer: '#8a8fb5', // --ink-dim silver
+    truckCab: '#ff006e', // --magenta
+    log: '#9a6bff', // electric violet
+    logGrain: 'rgba(40,20,80,0.7)',
+    logRing: '#6b4ddb',
+    turtleBody: '#00ff88', // --green
+    turtleShell: '#00b35f',
+    turtleSubmerged: 'rgba(0,255,136,0.4)',
+    frogBody: '#b6ff00', // vivid lime to pop over the green river world
+    frogLegs: '#39ff14',
+    frogEye: '#fff',
+    frogPupil: '#0a0a0f',
+    hudScore: '#e6e9ff', // --ink
+    hudLevel: '#00f5ff', // --cyan
+    hudLife: '#39ff14',
+    hudLifeEye: '#fff',
+    timeBarHigh: '#00ff88', // --green
+    timeBarMid: '#f5ff00', // --yellow
+    timeBarLow: '#ff006e', // --magenta
+    timeBarBg: 'rgba(10,10,15,0.6)',
+    glow: 8,
+  },
+  // CRT / phosphor: warm amber + phosphor green over warm-dark backdrops.
+  retro: {
+    goalsRow: '#0b1a0b',
+    river: '#0a2630', // dark teal water
+    safe: '#101a0a',
+    road: '#0b0900', // warm near-black
+    laneLine: 'rgba(255,176,0,0.22)', // amber dashes
+    goalMouth: '#06140a',
+    goalBorder: '#ffb000', // amber phosphor
+    goalFrog: '#39ff14', // bright phosphor green
+    cars: ['#ff6b35', '#ffcf3a', '#9bff6a', '#ff3d3d'], // warm phosphor mix
+    windshield: 'rgba(255,220,150,0.6)',
+    wheel: '#1a1408',
+    truckTrailer: '#c9b896', // warm metal
+    truckCab: '#ff6b35', // phosphor orange
+    log: '#9a6b2f', // warm wood/amber
+    logGrain: 'rgba(60,38,10,0.7)',
+    logRing: '#7a4f1f',
+    turtleBody: '#39ff14', // phosphor green
+    turtleShell: '#2bb80f',
+    turtleSubmerged: 'rgba(57,255,20,0.4)',
+    frogBody: '#9bff6a', // pale phosphor green
+    frogLegs: '#39ff14',
+    frogEye: '#fff',
+    frogPupil: '#1a1408',
+    hudScore: '#ffd27a', // warm amber
+    hudLevel: '#39ff14', // phosphor green
+    hudLife: '#9bff6a',
+    hudLifeEye: '#fff',
+    timeBarHigh: '#39ff14',
+    timeBarMid: '#ffb000',
+    timeBarLow: '#ff3d3d',
+    timeBarBg: 'rgba(11,9,0,0.6)',
+    glow: 5,
+  },
+};
