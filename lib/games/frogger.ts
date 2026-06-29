@@ -142,15 +142,18 @@ function buildLanes(level: number): Lane[] {
     });
   });
 
-  const riverConfigs: { speed: number; dir: 1 | -1; kind: 'log' | 'turtle' }[] =
-    [
-      { speed: 0.03, dir: -1, kind: 'turtle' },
-      { speed: 0.022, dir: 1, kind: 'log' },
-      { speed: 0.036, dir: -1, kind: 'log' },
-      { speed: 0.018, dir: 1, kind: 'turtle' },
-      { speed: 0.028, dir: -1, kind: 'log' },
-      { speed: 0.024, dir: 1, kind: 'log' },
-    ];
+  const riverConfigs: {
+    speed: number;
+    dir: 1 | -1;
+    kind: 'log' | 'turtle';
+  }[] = [
+    { speed: 0.03, dir: -1, kind: 'turtle' },
+    { speed: 0.022, dir: 1, kind: 'log' },
+    { speed: 0.036, dir: -1, kind: 'log' },
+    { speed: 0.018, dir: 1, kind: 'turtle' },
+    { speed: 0.028, dir: -1, kind: 'log' },
+    { speed: 0.024, dir: 1, kind: 'log' },
+  ];
   riverConfigs.forEach((cfg, i) => {
     lanes.push({
       row: ROW_RIVER_TOP + i,
@@ -206,16 +209,17 @@ export function initFrogger(
 ): FroggerController {
   const ctx = canvas.getContext('2d')!;
 
+  // Canvas offscreen para la capa de glow:
+  // en lugar de aplicar shadowBlur ~40 veces por frame (una por entidad),
+  // dibujamos las siluetas planas aquí y las componemos UNA vez con
+  // ctx.filter='blur(Npx)'. classic (glow:0) no pasa por esta ruta.
+  const glowCanvas = document.createElement('canvas');
+  glowCanvas.width = CANVAS_W;
+  glowCanvas.height = CANVAS_H;
+  const gctx = glowCanvas.getContext('2d')!;
+
   let palette = FROGGER_SKINS[initialSkin];
   let paused = false;
-
-  const setGlow = (color: string) => {
-    ctx.shadowBlur = palette.glow;
-    ctx.shadowColor = palette.glow ? color : 'transparent';
-  };
-  const clearGlow = () => {
-    ctx.shadowBlur = 0;
-  };
 
   const s = createState();
 
@@ -422,155 +426,193 @@ export function initFrogger(
     emitChanges();
   };
 
-  // ---------- Draw ----------
+  // ---------- Draw helpers ----------
+  // Todos los helpers aceptan un contexto `g` (main o glow) y un flag `flat`.
+  // flat=true  → silueta primaria coloreada para la capa de glow (sin detalles)
+  // flat=false → dibujo completo y nítido (sin shadowBlur)
 
   const px = (col: number) => col * CELL;
 
-  function roundRect(x: number, y: number, w: number, h: number, r: number) {
+  function roundRect(
+    g: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    r: number,
+  ) {
     const rr = Math.min(r, w / 2, h / 2);
-    ctx.beginPath();
-    ctx.moveTo(x + rr, y);
-    ctx.arcTo(x + w, y, x + w, y + h, rr);
-    ctx.arcTo(x + w, y + h, x, y + h, rr);
-    ctx.arcTo(x, y + h, x, y, rr);
-    ctx.arcTo(x, y, x + w, y, rr);
-    ctx.closePath();
+    g.beginPath();
+    g.moveTo(x + rr, y);
+    g.arcTo(x + w, y, x + w, y + h, rr);
+    g.arcTo(x + w, y + h, x, y + h, rr);
+    g.arcTo(x, y + h, x, y, rr);
+    g.arcTo(x, y, x + w, y, rr);
+    g.closePath();
   }
 
-  const drawCar = (e: Entity, y: number, color: string) => {
+  const drawCar = (
+    g: CanvasRenderingContext2D,
+    e: Entity,
+    y: number,
+    color: string,
+    flat: boolean,
+  ) => {
     const x = px(e.col);
     const w = e.width * CELL;
-    setGlow(color);
-    ctx.fillStyle = color;
-    roundRect(x + 3, y + 7, w - 6, CELL - 14, 6);
-    ctx.fill();
-    clearGlow();
-    ctx.fillStyle = palette.windshield;
-    roundRect(x + w - 16, y + 11, 8, CELL - 22, 3);
-    ctx.fill();
-    ctx.fillStyle = palette.wheel;
-    ctx.fillRect(x + 6, y + 4, 8, 4);
-    ctx.fillRect(x + 6, y + CELL - 8, 8, 4);
-    ctx.fillRect(x + w - 14, y + 4, 8, 4);
-    ctx.fillRect(x + w - 14, y + CELL - 8, 8, 4);
+    g.fillStyle = color;
+    roundRect(g, x + 3, y + 7, w - 6, CELL - 14, 6);
+    g.fill();
+    if (flat) return;
+    g.fillStyle = palette.windshield;
+    roundRect(g, x + w - 16, y + 11, 8, CELL - 22, 3);
+    g.fill();
+    g.fillStyle = palette.wheel;
+    g.fillRect(x + 6, y + 4, 8, 4);
+    g.fillRect(x + 6, y + CELL - 8, 8, 4);
+    g.fillRect(x + w - 14, y + 4, 8, 4);
+    g.fillRect(x + w - 14, y + CELL - 8, 8, 4);
   };
 
-  const drawTruck = (e: Entity, y: number) => {
+  const drawTruck = (
+    g: CanvasRenderingContext2D,
+    e: Entity,
+    y: number,
+    flat: boolean,
+  ) => {
     const x = px(e.col);
     const w = e.width * CELL;
-    setGlow(palette.truckTrailer);
-    ctx.fillStyle = palette.truckTrailer;
-    roundRect(x + 3, y + 6, w - 6, CELL - 12, 4);
-    ctx.fill();
-    setGlow(palette.truckCab);
-    ctx.fillStyle = palette.truckCab;
-    roundRect(x + w - CELL + 4, y + 6, CELL - 8, CELL - 12, 4);
-    ctx.fill();
-    clearGlow();
-    ctx.fillStyle = palette.wheel;
+    // remolque + cabina (ambos brillan en neon, con sus propios colores)
+    g.fillStyle = palette.truckTrailer;
+    roundRect(g, x + 3, y + 6, w - 6, CELL - 12, 4);
+    g.fill();
+    g.fillStyle = palette.truckCab;
+    roundRect(g, x + w - CELL + 4, y + 6, CELL - 8, CELL - 12, 4);
+    g.fill();
+    if (flat) return;
+    g.fillStyle = palette.wheel;
     for (let wx = x + 8; wx < x + w - 8; wx += 14) {
-      ctx.fillRect(wx, y + CELL - 8, 8, 4);
-      ctx.fillRect(wx, y + 4, 8, 4);
+      g.fillRect(wx, y + CELL - 8, 8, 4);
+      g.fillRect(wx, y + 4, 8, 4);
     }
   };
 
-  const drawLog = (e: Entity, y: number) => {
+  const drawLog = (
+    g: CanvasRenderingContext2D,
+    e: Entity,
+    y: number,
+    flat: boolean,
+  ) => {
     const x = px(e.col);
     const w = e.width * CELL;
-    setGlow(palette.log);
-    ctx.fillStyle = palette.log;
-    roundRect(x + 1, y + 6, w - 2, CELL - 12, 8);
-    ctx.fill();
-    clearGlow();
-    ctx.strokeStyle = palette.logGrain;
-    ctx.lineWidth = 2;
+    g.fillStyle = palette.log;
+    roundRect(g, x + 1, y + 6, w - 2, CELL - 12, 8);
+    g.fill();
+    if (flat) return;
+    g.strokeStyle = palette.logGrain;
+    g.lineWidth = 2;
     for (let i = 1; i < e.width; i++) {
-      ctx.beginPath();
-      ctx.moveTo(x + i * CELL, y + 8);
-      ctx.lineTo(x + i * CELL, y + CELL - 8);
-      ctx.stroke();
+      g.beginPath();
+      g.moveTo(x + i * CELL, y + 8);
+      g.lineTo(x + i * CELL, y + CELL - 8);
+      g.stroke();
     }
-    ctx.fillStyle = palette.logRing;
-    ctx.beginPath();
-    ctx.ellipse(x + 6, y + CELL / 2, 4, CELL / 2 - 8, 0, 0, Math.PI * 2);
-    ctx.fill();
+    g.fillStyle = palette.logRing;
+    g.beginPath();
+    g.ellipse(x + 6, y + CELL / 2, 4, CELL / 2 - 8, 0, 0, Math.PI * 2);
+    g.fill();
   };
 
-  const drawTurtles = (e: Entity, y: number) => {
+  const drawTurtles = (
+    g: CanvasRenderingContext2D,
+    e: Entity,
+    y: number,
+    flat: boolean,
+  ) => {
     const x = px(e.col);
     for (let i = 0; i < e.width; i++) {
       const cx = x + i * CELL + CELL / 2;
       const cy = y + CELL / 2;
       if (e.submerged) {
-        ctx.strokeStyle = palette.turtleSubmerged;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(cx, cy, CELL / 2 - 7, 0, Math.PI * 2);
-        ctx.stroke();
+        if (flat) continue; // la tortuga sumergida no brilla
+        g.strokeStyle = palette.turtleSubmerged;
+        g.lineWidth = 2;
+        g.beginPath();
+        g.arc(cx, cy, CELL / 2 - 7, 0, Math.PI * 2);
+        g.stroke();
       } else {
-        setGlow(palette.turtleBody);
-        ctx.fillStyle = palette.turtleBody;
-        ctx.beginPath();
-        ctx.arc(cx, cy, CELL / 2 - 5, 0, Math.PI * 2);
-        ctx.fill();
-        clearGlow();
-        ctx.fillStyle = palette.turtleShell;
-        ctx.beginPath();
-        ctx.arc(cx, cy, CELL / 2 - 11, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = palette.turtleBody;
-        ctx.beginPath();
-        ctx.arc(cx + (e.col < COLS / 2 ? 9 : -9), cy, 3, 0, Math.PI * 2);
-        ctx.fill();
+        // cuerpo (brilla)
+        g.fillStyle = palette.turtleBody;
+        g.beginPath();
+        g.arc(cx, cy, CELL / 2 - 5, 0, Math.PI * 2);
+        g.fill();
+        if (flat) continue;
+        // caparazón y cabeza (no brillan)
+        g.fillStyle = palette.turtleShell;
+        g.beginPath();
+        g.arc(cx, cy, CELL / 2 - 11, 0, Math.PI * 2);
+        g.fill();
+        g.fillStyle = palette.turtleBody;
+        g.beginPath();
+        g.arc(cx + (e.col < COLS / 2 ? 9 : -9), cy, 3, 0, Math.PI * 2);
+        g.fill();
       }
     }
   };
 
-  const drawFrog = (x: number, y: number) => {
+  const drawFrog = (
+    g: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    flat: boolean,
+  ) => {
     const cx = x + CELL / 2;
     const cy = y + CELL / 2;
-    setGlow(palette.frogBody);
-    ctx.fillStyle = palette.frogBody;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, 14, 12, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = palette.frogLegs;
+    // cuerpo + patas (brillan)
+    g.fillStyle = palette.frogBody;
+    g.beginPath();
+    g.ellipse(cx, cy, 14, 12, 0, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = palette.frogLegs;
     const spread = s.frog.animating ? 8 : 4;
-    ctx.fillRect(x + 2, y + 6 - (s.frog.animating ? 2 : 0), 6, 5);
-    ctx.fillRect(x + CELL - 8, y + 6 - (s.frog.animating ? 2 : 0), 6, 5);
-    ctx.fillRect(x + 2, y + CELL - 12 + (s.frog.animating ? spread : 0), 6, 5);
-    ctx.fillRect(
+    g.fillRect(x + 2, y + 6 - (s.frog.animating ? 2 : 0), 6, 5);
+    g.fillRect(x + CELL - 8, y + 6 - (s.frog.animating ? 2 : 0), 6, 5);
+    g.fillRect(x + 2, y + CELL - 12 + (s.frog.animating ? spread : 0), 6, 5);
+    g.fillRect(
       x + CELL - 8,
       y + CELL - 12 + (s.frog.animating ? spread : 0),
       6,
       5,
     );
-    clearGlow();
-    ctx.fillStyle = palette.frogEye;
-    ctx.beginPath();
-    ctx.arc(cx - 6, cy - 7, 4, 0, Math.PI * 2);
-    ctx.arc(cx + 6, cy - 7, 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = palette.frogPupil;
-    ctx.beginPath();
-    ctx.arc(cx - 6, cy - 7, 2, 0, Math.PI * 2);
-    ctx.arc(cx + 6, cy - 7, 2, 0, Math.PI * 2);
-    ctx.fill();
+    if (flat) return;
+    // ojos y pupilas (no brillan)
+    g.fillStyle = palette.frogEye;
+    g.beginPath();
+    g.arc(cx - 6, cy - 7, 4, 0, Math.PI * 2);
+    g.arc(cx + 6, cy - 7, 4, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = palette.frogPupil;
+    g.beginPath();
+    g.arc(cx - 6, cy - 7, 2, 0, Math.PI * 2);
+    g.arc(cx + 6, cy - 7, 2, 0, Math.PI * 2);
+    g.fill();
   };
 
-  const drawGoalFrog = (x: number, y: number) => {
+  const drawGoalFrog = (g: CanvasRenderingContext2D, x: number, y: number) => {
     const cx = x + CELL / 2;
     const cy = y + CELL / 2;
-    setGlow(palette.goalFrog);
-    ctx.fillStyle = palette.goalFrog;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, 9, 8, 0, 0, Math.PI * 2);
-    ctx.fill();
-    clearGlow();
+    g.fillStyle = palette.goalFrog;
+    g.beginPath();
+    g.ellipse(cx, cy, 9, 8, 0, 0, Math.PI * 2);
+    g.fill();
   };
+
+  // ---------- Draw ----------
 
   const draw = () => {
     ctx.shadowBlur = 0;
+
+    // 1. Fondos de zona (ctx, sin glow)
     ctx.fillStyle = palette.goalsRow;
     ctx.fillRect(0, ROW_GOALS * CELL, CANVAS_W, CELL);
     ctx.fillStyle = palette.river;
@@ -602,52 +644,116 @@ export function initFrogger(
     ctx.fillStyle = palette.safe;
     ctx.fillRect(0, ROW_START * CELL, CANVAS_W, CELL);
 
+    // 2. Bocas de meta: solo el fondo oscuro (ctx, sin glow)
     for (let i = 0; i < NUM_GOALS; i++) {
-      const x = goalStartCol(i) * CELL;
-      const w = 2 * CELL;
-      const y = ROW_GOALS * CELL;
       ctx.fillStyle = palette.goalMouth;
-      ctx.fillRect(x, y, w, CELL);
-      setGlow(palette.goalBorder);
-      ctx.strokeStyle = palette.goalBorder;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x + 2, y + 2, w - 4, CELL - 4);
-      clearGlow();
-      if (s.goals[i]) drawGoalFrog(x + CELL / 2, y);
+      ctx.fillRect(goalStartCol(i) * CELL, ROW_GOALS * CELL, 2 * CELL, CELL);
+    }
+
+    // Posición de la rana (calculada una vez para ambas pasadas)
+    let frogX = px(s.frog.col);
+    let frogY = s.frog.row * CELL;
+    if (s.frog.animating) {
+      const t = Math.min(1, s.frog.animT / HOP_MS);
+      frogX = px(s.frog.col + (s.frog.targetCol - s.frog.col) * t);
+      frogY =
+        (s.frog.row + (s.frog.targetRow - s.frog.row) * t) * CELL -
+        Math.sin(t * Math.PI) * CELL * 0.3;
     }
 
     const carColors = palette.cars;
+
+    // 3. Capa de glow: siluetas planas en gctx → 1 blur GPU → componer sobre ctx
+    //    classic (glow:0) salta esta ruta completamente → costo cero.
+    if (palette.glow) {
+      gctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+
+      // bordes de meta + ranas completadas
+      for (let i = 0; i < NUM_GOALS; i++) {
+        const gx = goalStartCol(i) * CELL;
+        const gw = 2 * CELL;
+        const gy = ROW_GOALS * CELL;
+        gctx.strokeStyle = palette.goalBorder;
+        gctx.lineWidth = 2;
+        gctx.strokeRect(gx + 2, gy + 2, gw - 4, CELL - 4);
+        if (s.goals[i]) drawGoalFrog(gctx, gx + CELL / 2, gy);
+      }
+
+      // siluetas de entidades
+      for (const lane of s.lanes) {
+        const y = lane.row * CELL;
+        lane.entities.forEach((e, idx) => {
+          switch (e.type) {
+            case 'car':
+              drawCar(
+                gctx,
+                e,
+                y,
+                carColors[(lane.row + idx) % carColors.length],
+                true,
+              );
+              break;
+            case 'truck':
+              drawTruck(gctx, e, y, true);
+              break;
+            case 'log':
+              drawLog(gctx, e, y, true);
+              break;
+            case 'turtle':
+              if (!e.submerged) drawTurtles(gctx, e, y, true);
+              break;
+          }
+        });
+      }
+
+      drawFrog(gctx, frogX, frogY, true);
+
+      // Componer: 1 operación de blur sobre todo el canvas de glow
+      ctx.save();
+      ctx.filter = `blur(${palette.glow}px)`;
+      ctx.drawImage(glowCanvas, 0, 0);
+      ctx.filter = 'none';
+      ctx.restore();
+    }
+
+    // 4. Pasada nítida: dibujo completo sin shadowBlur (ctx, flat=false)
+    for (let i = 0; i < NUM_GOALS; i++) {
+      const gx = goalStartCol(i) * CELL;
+      const gw = 2 * CELL;
+      const gy = ROW_GOALS * CELL;
+      ctx.strokeStyle = palette.goalBorder;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(gx + 2, gy + 2, gw - 4, CELL - 4);
+      if (s.goals[i]) drawGoalFrog(ctx, gx + CELL / 2, gy);
+    }
     for (const lane of s.lanes) {
       const y = lane.row * CELL;
       lane.entities.forEach((e, idx) => {
         switch (e.type) {
           case 'car':
-            drawCar(e, y, carColors[(lane.row + idx) % carColors.length]);
+            drawCar(
+              ctx,
+              e,
+              y,
+              carColors[(lane.row + idx) % carColors.length],
+              false,
+            );
             break;
           case 'truck':
-            drawTruck(e, y);
+            drawTruck(ctx, e, y, false);
             break;
           case 'log':
-            drawLog(e, y);
+            drawLog(ctx, e, y, false);
             break;
           case 'turtle':
-            drawTurtles(e, y);
+            drawTurtles(ctx, e, y, false);
             break;
         }
       });
     }
+    drawFrog(ctx, frogX, frogY, false);
 
-    let fx = px(s.frog.col);
-    let fy = s.frog.row * CELL;
-    if (s.frog.animating) {
-      const t = Math.min(1, s.frog.animT / HOP_MS);
-      fx = px(s.frog.col + (s.frog.targetCol - s.frog.col) * t);
-      fy =
-        (s.frog.row + (s.frog.targetRow - s.frog.row) * t) * CELL -
-        Math.sin(t * Math.PI) * CELL * 0.3;
-    }
-    drawFrog(fx, fy);
-
+    // 5. HUD (ctx, sin glow)
     ctx.fillStyle = palette.hudScore;
     ctx.font = 'bold 16px monospace';
     ctx.textBaseline = 'top';
