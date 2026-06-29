@@ -13,5 +13,6 @@ El sistema base vive en `lib/games/skins.ts` y el selector global en `components
 | tetris     | ✅      | ✅    | ✅   | –           | sí                 | 2026-06-24           |
 | arkanoid   | ✅      | ✅    | ✅   | –           | sí                 | 2026-06-24           |
 | snake      | ✅      | ✅    | ✅   | –           | parcial            | 2026-06-24           |
+| frogger    | ✅      | ✅    | ✅   | –           | sí                 | 2026-06-26           |
 
 Leyenda: ✅ aplicado y verificado · 🟡 en progreso · – pendiente

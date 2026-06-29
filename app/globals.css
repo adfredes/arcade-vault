@@ -833,6 +833,32 @@ a {
   filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.5));
 }
 
+.cover-frogger {
+  background: linear-gradient(
+    180deg,
+    #0a2a12 0 18%,
+    #0a0a18 18% 46%,
+    #042038 46% 82%,
+    #0a2a12 82% 100%
+  );
+}
+.cover-frogger::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, #c01030 0 30px, transparent 30px) 10% 26% / 60px 8px
+      no-repeat,
+    linear-gradient(90deg, #f5d000 0 24px, transparent 24px) 70% 36% / 48px 8px
+      no-repeat,
+    linear-gradient(90deg, #8a5a2a 0 44px, transparent 44px) 18% 60% / 70px 10px
+      no-repeat,
+    linear-gradient(90deg, #8a5a2a 0 44px, transparent 44px) 64% 72% / 70px 10px
+      no-repeat,
+    radial-gradient(circle at 50% 90%, var(--green) 0 11px, transparent 12px);
+  filter: drop-shadow(0 0 8px rgba(132, 255, 88, 0.55));
+}
+
 .cover-duelo {
   background: #0a0a18;
 }
@@ -1630,9 +1656,11 @@ a {
 
 /* ===== virtual gamepad — landscape compact mode ===== */
 @media (orientation: landscape) and (pointer: coarse) {
-  /* Shrink canvas so it fits without scrolling */
+  /* Shrink canvas so it fits without scrolling. `!important` también gana sobre
+     juegos cuyo canvas fija max-height inline (p. ej. Frogger usa max-height:100%
+     en portrait para no recortar el tablero); en landscape este tope manda. */
   .crt-screen canvas {
-    max-height: 45vh;
+    max-height: 45vh !important;
     width: auto !important;
   }
 
