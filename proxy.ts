@@ -2,8 +2,17 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 // Next.js 16 renombró "middleware" a "proxy" (misma funcionalidad).
-// Refresca las cookies de sesión de Supabase en cada request (patrón @supabase/ssr).
-// No bloquea ninguna ruta: jugar como invitado sigue libre en todo el sitio.
+// Refresca las cookies de sesión de Supabase en cada request (patrón @supabase/ssr)
+// y aplica redirecciones por sesión. Jugar como invitado sigue libre en todo el sitio.
+
+// Rutas que un usuario YA autenticado no debería ver (login/registro).
+// `/auth/callback` queda fuera a propósito: maneja el intercambio de código.
+const GUEST_ONLY = ['/auth'];
+
+// (Futuro) Rutas que exigirán sesión: los no autenticados se redirigen a /auth.
+// Agregar acá los prefijos cuando existan pantallas de auth forzada.
+const AUTH_REQUIRED: string[] = [];
+
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -27,7 +36,25 @@ export async function proxy(request: NextRequest) {
   );
 
   // Refresca la sesión (revalida y reescribe las cookies si hace falta).
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { pathname } = request.nextUrl;
+
+  // Autenticado entrando a login/registro → al Vault.
+  if (user && GUEST_ONLY.some((p) => pathname === p)) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/';
+    return NextResponse.redirect(url);
+  }
+
+  // No autenticado en ruta protegida → a /auth.
+  if (!user && AUTH_REQUIRED.some((p) => pathname.startsWith(p))) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth';
+    return NextResponse.redirect(url);
+  }
 
   return supabaseResponse;
 }
