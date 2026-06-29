@@ -123,11 +123,82 @@ export interface FroggerGameHandle {
 
 ## Decisiones tomadas y descartadas
 
-| Decisión                                         | Elegida                                             | Descartada                                     | Razón                                                                                                                 |
-| ------------------------------------------------ | --------------------------------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Arquitectura del módulo de juego                 | `lib/games/frogger.ts` + wrapper `forwardRef`       | Lógica inline en el componente (estado actual) | Elimina re-renders de React en el hot path; alinea Frogger con el patrón de los demás juegos                          |
-| Estado de score/lives/level                      | `useRef` + DOM directo                              | `useState`                                     | Cambian hasta 60x/s; con `useState` cada cambio dispara reconciliación React                                          |
-| Control de pausa                                 | `ref.current.pause()/resume()`                      | Prop `paused`                                  | El prop obliga a re-render del componente cada vez que cambia                                                         |
-| Skin en caliente                                 | `setSkin()` en el controlador + `useEffect([skin])` | `skin` en el `key` (remount)                   | Remount destruye la partida en curso; `setSkin` solo reasigna la paleta                                               |
-| Optimizaciones de canvas (shadowBlur, offscreen) | Fuera de scope                                      | Incluir en este spec                           | El bottleneck identificado es React, no el canvas; optimizaciones canvas son un spec separado si persiste el problema |
-| Scope de otros juegos                            | Solo Frogger                                        | Refactor simultáneo de todos los juegos        | Frogger es el único que no sigue el patrón `lib/games/`; los demás ya lo respetan                                     |
+| Decisión                                         | Elegida                                             | Descartada                                     | Razón                                                                                                                       |
+| ------------------------------------------------ | --------------------------------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Arquitectura del módulo de juego                 | `lib/games/frogger.ts` + wrapper `forwardRef`       | Lógica inline en el componente (estado actual) | Elimina re-renders de React en el hot path; alinea Frogger con el patrón de los demás juegos                                |
+| Estado de score/lives/level                      | `useRef` + DOM directo                              | `useState`                                     | Cambian hasta 60x/s; con `useState` cada cambio dispara reconciliación React                                                |
+| Control de pausa                                 | `ref.current.pause()/resume()`                      | Prop `paused`                                  | El prop obliga a re-render del componente cada vez que cambia                                                               |
+| Skin en caliente                                 | `setSkin()` en el controlador + `useEffect([skin])` | `skin` en el `key` (remount)                   | Remount destruye la partida en curso; `setSkin` solo reasigna la paleta                                                     |
+| Optimizaciones de canvas (shadowBlur, offscreen) | **Implementado post-merge** (ver §Addendum)         | Fuera de scope inicial                         | El refactor estructural eliminó los re-renders de React, pero el glow per-entidad seguía siendo el bottleneck en neon/retro |
+| Scope de otros juegos                            | Solo Frogger                                        | Refactor simultáneo de todos los juegos        | Frogger es el único que no sigue el patrón `lib/games/`; los demás ya lo respetan                                           |
+
+---
+
+## Addendum — Fix de performance de glow (post-merge, 2026-06-29)
+
+### Problema identificado
+
+Tras implementar el spec, `classic` (`glow: 0`) iba fluido pero **`neon` y `retro` seguían
+con caídas de FPS**. La causa fue `ctx.shadowBlur` aplicado **por entidad** dentro de loops
+anidados: ~40 rellenos borrosos por frame (15 vehículos + 18 objetos de río + rana + 5 bordes
+de meta). Cada `fill` con `shadowBlur > 0` fuerza un blur gaussiano caro en la GPU.
+`CSS filter: drop-shadow` sobre el canvas no era viable porque el canvas es 100% opaco.
+
+Comparativa con otros juegos del proyecto:
+
+- **Snake / Arkanoid**: setean `shadowBlur` **una vez global** por frame → coste mínimo.
+- **Asteroides / Tetris**: por entidad como Frogger, pero con menos entidades simultáneas.
+- **Frogger**: por entidad con mayor densidad (~40 fills borrosos), y sin clear global
+  (usa bandas horizontales en lugar de un `fillRect(0,0,W,H)` único).
+
+### Solución aplicada — capa de glow offscreen
+
+Se reemplazaron los ~40 `shadowBlur` por frame con **una sola operación de blur GPU**,
+implementada en `lib/games/frogger.ts` (commit `dd5ea5e`):
+
+1. **Canvas offscreen** creado al iniciar `initFrogger`:
+
+   ```ts
+   const glowCanvas = document.createElement('canvas');
+   glowCanvas.width = CANVAS_W;
+   glowCanvas.height = CANVAS_H;
+   const gctx = glowCanvas.getContext('2d')!;
+   ```
+
+2. **Draw helpers parametrizados** con `(g: CanvasRenderingContext2D, flat: boolean)`:
+   - `flat=true` → silueta primaria coloreada (solo el cuerpo/forma que brillaba) para el glow layer.
+   - `flat=false` → dibujo completo sin `shadowBlur`.
+   - Detalles que no brillaban (parabrisas, ruedas, vetas de tronco, caparazón/cabeza de tortuga,
+     ojos/pupilas de rana) se omiten en la pasada `flat=true`.
+   - Tortugas sumergidas nunca entran en el glow layer.
+
+3. **Orden de renderizado en `draw()` cada frame**:
+
+   ```
+   1. Fondos de zona (ctx, sin glow)
+   2. Rellenos de bocas de meta (ctx, sin glow)
+   3. Si palette.glow > 0:
+        gctx.clearRect(...)
+        → siluetas en gctx (bordes de meta, entidades, rana)
+        ctx.save()
+        ctx.filter = `blur(${palette.glow}px)`
+        ctx.drawImage(glowCanvas, 0, 0)   ← 1 blur GPU/frame
+        ctx.filter = 'none'
+        ctx.restore()
+   4. Pasada nítida completa (ctx, flat=false)
+   5. HUD (ctx, sin glow)
+   ```
+
+4. **`classic` (`glow: 0`) salta toda la ruta de glow** → comportamiento idéntico al anterior,
+   cero coste adicional.
+
+### Impacto
+
+| Métrica              | Antes del fix         | Después del fix              |
+| -------------------- | --------------------- | ---------------------------- |
+| `shadowBlur` / frame | ~40 (neon), ~40 retro | 0 (colapsados en ctx.filter) |
+| Operaciones de blur  | ~40 gaussianos        | 1 `drawImage` con filter GPU |
+| `classic`            | sin cambio            | sin cambio                   |
+
+Capturas post-fix en `.playwright-screenshots/frogger-neon-glow-offscreen.png` y
+`.playwright-screenshots/frogger-retro-glow-offscreen.png`.
