@@ -6,3 +6,4 @@
 | `tetris`     | TETRIS     | PUZZLE    | cyan   | Encaja las piezas y completa líneas.               |
 | `arkanoid`   | ARKANOID   | ARCADE    | cyan   | Rompe todos los bloques antes de perder la pelota. |
 | `snake`      | SNAKE      | ARCADE    | green  | Comé frutas, crecé, no te choques.                 |
+| `frogger`    | FROGGER    | ARCADE    | green  | Cruzá las calles y el río sin que te aplasten.     |

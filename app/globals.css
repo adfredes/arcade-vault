@@ -1444,6 +1444,33 @@ a {
   padding: 12px;
   font-size: 9px;
 }
+.auth-error {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--magenta, #ff3b6b);
+  border: 1px solid var(--magenta, #ff3b6b);
+  background: rgba(255, 59, 107, 0.08);
+  padding: 8px 10px;
+  margin-top: 10px;
+  letter-spacing: 0.04em;
+}
+.auth-note {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+.auth-note .mark {
+  margin: 0 auto 14px;
+}
+.auth-note p {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink);
+  line-height: 1.6;
+}
+.auth-note .email-hi {
+  color: var(--cyan);
+  font-weight: 600;
+}
 
 /* ===== salón ===== */
 .av-hall {
