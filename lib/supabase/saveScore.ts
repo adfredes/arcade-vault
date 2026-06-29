@@ -6,7 +6,14 @@ export async function saveScore(
   score: number,
 ): Promise<void> {
   const supabase = createClient();
-  await supabase
-    .from('scores')
-    .insert({ game_id: gameId, player_name: playerName, score });
+  // Liga el score a la cuenta si hay sesión; null si es invitado.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  await supabase.from('scores').insert({
+    game_id: gameId,
+    player_name: playerName,
+    score,
+    user_id: user?.id ?? null,
+  });
 }
