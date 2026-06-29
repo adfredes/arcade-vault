@@ -81,6 +81,13 @@ export function initTetris(
   const ctx = canvas.getContext('2d')!;
   const nextCtx = nextCanvas ? nextCanvas.getContext('2d') : null;
 
+  // Offscreen canvas for glow compositing (neon/retro skins).
+  // classic (glow:0) never uses it — zero extra cost in the default skin.
+  const glowCanvas = document.createElement('canvas');
+  glowCanvas.width = canvas.width; // 300
+  glowCanvas.height = canvas.height; // 600
+  const gctx = glowCanvas.getContext('2d')!;
+
   // ── Tipos / estado del juego (closure, no globales) ──────────────────────────
 
   interface Piece {
@@ -247,21 +254,18 @@ export function initTetris(
     colorIndex: number,
     size: number,
     alpha?: number,
+    flat?: boolean, // true → only fill color (for offscreen glow pass); no highlight, no shadowBlur
   ) {
     if (!colorIndex) return;
     const color = palette.pieces[colorIndex]!;
     context.globalAlpha = alpha ?? 1;
-    // glow
-    if (palette.glow > 0 && (alpha === undefined || alpha > 0.5)) {
-      context.shadowBlur = palette.glow;
-      context.shadowColor = color;
-    }
     context.fillStyle = color;
     context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-    // bevel highlight
-    context.shadowBlur = 0;
-    context.fillStyle = palette.highlight;
-    context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+    if (!flat) {
+      // bevel highlight
+      context.fillStyle = palette.highlight;
+      context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+    }
     context.globalAlpha = 1;
   }
 
@@ -287,7 +291,39 @@ export function initTetris(
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     drawGrid();
 
-    // board
+    // Offscreen glow pass — 1 GPU blur per frame (neon/retro).
+    // classic (glow:0) skips this block entirely → zero extra cost.
+    if (palette.glow > 0) {
+      gctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // board silhouettes to gctx
+      for (let r = 0; r < ROWS; r++)
+        for (let c = 0; c < COLS; c++)
+          drawBlock(gctx, c, r, board[r][c], BLOCK, undefined, true);
+
+      // current piece silhouette to gctx (ghost doesn't glow)
+      for (let r = 0; r < current.shape.length; r++)
+        for (let c = 0; c < current.shape[r].length; c++)
+          if (current.shape[r][c])
+            drawBlock(
+              gctx,
+              current.x + c,
+              current.y + r,
+              current.shape[r][c],
+              BLOCK,
+              undefined,
+              true,
+            );
+
+      // Compose: 1 GPU blur operation for the whole frame
+      ctx.save();
+      ctx.filter = `blur(${palette.glow}px)`;
+      ctx.drawImage(glowCanvas, 0, 0);
+      ctx.filter = 'none';
+      ctx.restore();
+    }
+
+    // Crisp pass — board, ghost, current piece (no shadowBlur)
     for (let r = 0; r < ROWS; r++)
       for (let c = 0; c < COLS; c++) drawBlock(ctx, c, r, board[r][c], BLOCK);
 
@@ -326,9 +362,15 @@ export function initTetris(
     const shape = next.shape;
     const offX = Math.floor((4 - shape[0].length) / 2);
     const offY = Math.floor((4 - shape.length) / 2);
+    // Preview has ≤4 same-color blocks → one global shadowBlur is enough (low density)
+    if (palette.glow > 0) {
+      nextCtx.shadowBlur = palette.glow;
+      nextCtx.shadowColor = palette.pieces[next.type]!;
+    }
     for (let r = 0; r < shape.length; r++)
       for (let c = 0; c < shape[r].length; c++)
         drawBlock(nextCtx, offX + c, offY + r, shape[r][c], NB);
+    nextCtx.shadowBlur = 0;
   }
 
   // ── Fin de juego / pausa ─────────────────────────────────────────────────────

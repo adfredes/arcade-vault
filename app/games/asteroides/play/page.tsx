@@ -25,44 +25,76 @@ export default function AsteroidsPlayPage() {
   const router = useRouter();
   const { user } = useUser();
 
-  const [score, setScore] = useState(0);
-  const [lives, setLives] = useState(3);
-  const [level, setLevel] = useState(1);
-  const [paused, setPaused] = useState(false);
+  // React state: only for UI branches that require re-render
   const [over, setOver] = useState(false);
-  const [finalScore, setFinalScore] = useState(0);
   const [playerName, setPlayerName] = useState(user?.name ?? 'INVITADO');
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [gameKey, setGameKey] = useState(0);
   const [skin, setSkin] = useSkin();
 
+  // Refs for hot-path values — updated via DOM, never trigger re-render
   const gameRef = useRef<AsteroidsGameHandle>(null);
+  const pausedRef = useRef(false);
+  const finalScoreRef = useRef(0);
+
+  // DOM refs for HUD spans and interactive elements
+  const scoreSpanRef = useRef<HTMLSpanElement>(null);
+  const livesSpanRef = useRef<HTMLSpanElement>(null);
+  const levelSpanRef = useRef<HTMLSpanElement>(null);
+  const pauseBtnDesktopRef = useRef<HTMLButtonElement>(null);
+  const pauseBtnMobileRef = useRef<HTMLButtonElement>(null);
+  const pauseOverlayRef = useRef<HTMLDivElement>(null);
+
+  const onScoreChange = useCallback((s: number) => {
+    if (scoreSpanRef.current)
+      scoreSpanRef.current.textContent = s.toLocaleString('es-ES');
+  }, []);
+
+  const onLivesChange = useCallback((l: number) => {
+    if (livesSpanRef.current)
+      livesSpanRef.current.textContent =
+        '♥ '.repeat(Math.max(0, l)).trim() || '—';
+  }, []);
+
+  const onLevelChange = useCallback((l: number) => {
+    if (levelSpanRef.current)
+      levelSpanRef.current.textContent = String(l).padStart(2, '0');
+  }, []);
+
+  const onGameOver = useCallback((s: number) => {
+    finalScoreRef.current = s;
+    // Hide pause overlay in case game ended while paused
+    if (pauseOverlayRef.current) pauseOverlayRef.current.style.display = 'none';
+    setOver(true);
+  }, []);
 
   const callbacks: AsteroidsCallbacks = {
-    onScoreChange: useCallback((s: number) => setScore(s), []),
-    onLivesChange: useCallback((l: number) => setLives(l), []),
-    onLevelChange: useCallback((l: number) => setLevel(l), []),
-    onGameOver: useCallback((s: number) => {
-      setFinalScore(s);
-      setOver(true);
-    }, []),
+    onScoreChange,
+    onLivesChange,
+    onLevelChange,
+    onGameOver,
   };
 
   const togglePause = () => {
-    if (paused) {
-      gameRef.current?.resume();
-      setPaused(false);
-    } else {
-      gameRef.current?.pause();
-      setPaused(true);
-    }
+    pausedRef.current = !pausedRef.current;
+    const label = pausedRef.current ? 'REANUDAR' : 'PAUSA';
+    if (pauseBtnDesktopRef.current)
+      pauseBtnDesktopRef.current.textContent = label;
+    if (pauseBtnMobileRef.current)
+      pauseBtnMobileRef.current.textContent = label;
+    if (pauseOverlayRef.current)
+      pauseOverlayRef.current.style.display = pausedRef.current
+        ? 'flex'
+        : 'none';
+    if (pausedRef.current) gameRef.current?.pause();
+    else gameRef.current?.resume();
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await saveScore('asteroides', playerName, finalScore);
+      await saveScore('asteroides', playerName, finalScoreRef.current);
     } finally {
       setSaving(false);
       setSaved(true);
@@ -70,12 +102,14 @@ export default function AsteroidsPlayPage() {
   };
 
   const restart = () => {
-    setScore(0);
-    setLives(3);
-    setLevel(1);
-    setPaused(false);
+    pausedRef.current = false;
+    finalScoreRef.current = 0;
+    if (pauseBtnDesktopRef.current)
+      pauseBtnDesktopRef.current.textContent = 'PAUSA';
+    if (pauseBtnMobileRef.current)
+      pauseBtnMobileRef.current.textContent = 'PAUSA';
+    if (pauseOverlayRef.current) pauseOverlayRef.current.style.display = 'none';
     setOver(false);
-    setFinalScore(0);
     setSaved(false);
     setSaving(false);
     setPlayerName(user?.name ?? 'INVITADO');
@@ -94,24 +128,37 @@ export default function AsteroidsPlayPage() {
           </div>
           <div className="hud-stat">
             <div className="l">Puntuación</div>
-            <div className="v">{score.toLocaleString('es-ES')}</div>
+            <div className="v">
+              <span ref={scoreSpanRef}>0</span>
+            </div>
           </div>
           <div className="hud-stat lives">
             <div className="l">Vidas</div>
             <div className="v">
-              {'♥ '.repeat(Math.max(0, lives)).trim() || '—'}
+              <span ref={livesSpanRef}>♥ ♥ ♥</span>
             </div>
           </div>
           <div className="hud-stat level">
             <div className="l">Nivel</div>
-            <div className="v">{String(level).padStart(2, '0')}</div>
+            <div className="v">
+              <span ref={levelSpanRef}>01</span>
+            </div>
           </div>
         </div>
 
         <div className="hud-actions">
-          <SkinSelector value={skin} onChange={setSkin} disabled={paused} />
-          <button className="btn yellow" onClick={togglePause} disabled={over}>
-            {paused ? 'REANUDAR' : 'PAUSA'}
+          <SkinSelector
+            value={skin}
+            onChange={setSkin}
+            disabled={pausedRef.current}
+          />
+          <button
+            ref={pauseBtnDesktopRef}
+            className="btn yellow"
+            onClick={togglePause}
+            disabled={over}
+          >
+            PAUSA
           </button>
           <button
             className="btn ghost"
@@ -139,34 +186,35 @@ export default function AsteroidsPlayPage() {
             skin={skin}
           />
 
-          {paused && !over && (
-            <div
-              className="crt-content"
-              style={{
-                background: 'rgba(0,0,0,0.6)',
-                zIndex: 5,
-                position: 'absolute',
-                inset: 0,
-              }}
-            >
-              <div>
-                <div className="pixel neon-yellow" style={{ fontSize: 22 }}>
-                  EN PAUSA
-                </div>
-                <div
-                  className="mono"
-                  style={{
-                    fontSize: 11,
-                    color: 'var(--ink-dim)',
-                    marginTop: 10,
-                    letterSpacing: '0.16em',
-                  }}
-                >
-                  PULSA REANUDAR PARA CONTINUAR
-                </div>
+          {/* Pause overlay: always mounted, shown/hidden imperatively — no re-render on toggle */}
+          <div
+            ref={pauseOverlayRef}
+            className="crt-content"
+            style={{
+              background: 'rgba(0,0,0,0.6)',
+              zIndex: 5,
+              position: 'absolute',
+              inset: 0,
+              display: 'none',
+            }}
+          >
+            <div>
+              <div className="pixel neon-yellow" style={{ fontSize: 22 }}>
+                EN PAUSA
+              </div>
+              <div
+                className="mono"
+                style={{
+                  fontSize: 11,
+                  color: 'var(--ink-dim)',
+                  marginTop: 10,
+                  letterSpacing: '0.16em',
+                }}
+              >
+                PULSA REANUDAR PARA CONTINUAR
               </div>
             </div>
-          )}
+          </div>
         </div>
 
         <div className="crt-bottom">
@@ -180,10 +228,19 @@ export default function AsteroidsPlayPage() {
 
       {/* Mobile footer: PAUSA + SkinSelector */}
       <div className="flex md:hidden items-center justify-center gap-4 px-4 py-3 flex-wrap">
-        <button className="btn yellow" onClick={togglePause} disabled={over}>
-          {paused ? 'REANUDAR' : 'PAUSA'}
+        <button
+          ref={pauseBtnMobileRef}
+          className="btn yellow"
+          onClick={togglePause}
+          disabled={over}
+        >
+          PAUSA
         </button>
-        <SkinSelector value={skin} onChange={setSkin} disabled={paused} />
+        <SkinSelector
+          value={skin}
+          onChange={setSkin}
+          disabled={pausedRef.current}
+        />
       </div>
 
       {over && (
@@ -191,7 +248,9 @@ export default function AsteroidsPlayPage() {
           <div className="modal">
             <h2>FIN DEL JUEGO</h2>
             <div className="final-label">PUNTUACIÓN FINAL</div>
-            <div className="final">{finalScore.toLocaleString('es-ES')}</div>
+            <div className="final">
+              {finalScoreRef.current.toLocaleString('es-ES')}
+            </div>
 
             {!saved ? (
               <div className="input-row">

@@ -24,17 +24,6 @@ export function initAsteroids(
 
   const palette = ASTEROIDS_SKINS[skin] ?? ASTEROIDS_SKINS[DEFAULT_SKIN];
 
-  // Apply (or clear) the per-skin glow on stroked/filled vector art.
-  function glowOn(color: string) {
-    if (palette.glow > 0) {
-      ctx.shadowBlur = palette.glow;
-      ctx.shadowColor = color;
-    }
-  }
-  function glowOff() {
-    ctx.shadowBlur = 0;
-  }
-
   // ── Input ──────────────────────────────────────────────────────────────────
 
   const keys: Record<string, boolean> = {};
@@ -109,12 +98,11 @@ export function initAsteroids(
       if (this.ttl <= 0) this.dead = true;
     }
     draw() {
-      glowOn(palette.bullet);
+      ctx.shadowColor = palette.bullet;
       ctx.fillStyle = palette.bullet;
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
       ctx.fill();
-      glowOff();
     }
   }
 
@@ -172,7 +160,7 @@ export function initAsteroids(
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(this.rot);
-      glowOn(palette.asteroid);
+      ctx.shadowColor = palette.asteroid;
       ctx.strokeStyle = palette.asteroid;
       ctx.lineWidth = 1.5;
       ctx.lineJoin = 'round';
@@ -182,7 +170,6 @@ export function initAsteroids(
         ctx.lineTo(this.verts[i][0], this.verts[i][1]);
       ctx.closePath();
       ctx.stroke();
-      glowOff();
       ctx.restore();
     }
   }
@@ -221,18 +208,19 @@ export function initAsteroids(
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(Math.PI / 4);
-      glowOn(palette.powerUp);
+      ctx.shadowColor = palette.powerUp;
       ctx.strokeStyle = palette.powerUp;
       ctx.lineWidth = 2;
       const r = this.radius * pulse;
       ctx.strokeRect(-r, -r, r * 2, r * 2);
       ctx.restore();
+      // Label text: no glow (preserve original behavior)
+      ctx.shadowColor = 'transparent';
       ctx.fillStyle = palette.powerUp;
       ctx.font = 'bold 12px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('3x', this.x, this.y);
-      glowOff();
     }
   }
 
@@ -312,7 +300,7 @@ export function initAsteroids(
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(this.angle);
-      glowOn(palette.ship);
+      ctx.shadowColor = palette.ship;
       ctx.strokeStyle = palette.ship;
       ctx.lineWidth = 1.5;
       ctx.lineJoin = 'round';
@@ -329,10 +317,9 @@ export function initAsteroids(
         ctx.lineTo(-8 - rand(6, 14), 0);
         ctx.lineTo(-8, 4);
         ctx.strokeStyle = palette.thrust;
-        glowOn(palette.thrust);
+        ctx.shadowColor = palette.thrust;
         ctx.stroke();
       }
-      glowOff();
       ctx.restore();
     }
   }
@@ -568,11 +555,17 @@ export function initAsteroids(
   function draw() {
     ctx.fillStyle = palette.bg;
     ctx.fillRect(0, 0, W, H);
+    // Particles carry no glow — draw before setting global shadowBlur
     particles.forEach((p) => p.draw());
+    // Set shadowBlur once per frame; entities only set shadowColor per draw
+    ctx.shadowBlur = palette.glow;
     asteroids.forEach((a) => a.draw());
     powerUps.forEach((p) => p.draw());
     bullets.forEach((b) => b.draw());
     ship.draw();
+    // Reset glow so it never bleeds into HUD text
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
     drawHUD();
   }
 
