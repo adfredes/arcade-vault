@@ -52,6 +52,7 @@ Each agent works on **one game at a time** and writes its own state file under `
 - **skin-designer** — adds neon/retro/clásico skins to a game (palettes in `lib/games/skins.ts` + global `SkinSelector`); records in `references/game-with-theme.md`. Edits code. → `.claude/agents/skin-designer.md`
 - **mobile-porter** — ports a game to mobile per `specs/10-mobile-touch-controls.md` (`VirtualGamepad`, scaled canvas, mobile footer); records in `references/mobile-ported.md`. Edits the play page + `*Game.tsx` only. → `.claude/agents/mobile-porter.md`
 - **game-performance-booster** — optimizes a game's FPS against the `specs/12-frogger-performance.md` checklist (ref+DOM HUD, imperative pause, glow, dt clamp, clean `destroy()`); records in `references/performance-optimized.md`. Never touches game logic. → `.claude/agents/game-performance-booster.md`
+- **security-auditor** — read-only security audit (site-wide, not per-game) against the SPEC 13/14 checklist: RLS + Supabase advisors via MCP, the 3 Next.js headers, password policy in `/auth`, signup rate limit and route protection in `proxy.ts`; records in `references/security/security-audit.md`. Reports findings, never patches code or DB. → `.claude/agents/security-auditor.md`
 
 ### Project skills (`.claude/skills/`)
 

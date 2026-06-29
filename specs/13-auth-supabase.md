@@ -1,6 +1,6 @@
 # SPEC 13 — Autenticación con Supabase Auth (registro, login y sesión)
 
-> **Estado:** Aprobado · **Depende de:** SPEC 04 (clientes Supabase), SPEC 06 (leaderboard/scores) · **Fecha:** 2026-06-29
+> **Estado:** Implementado · **Depende de:** SPEC 04 (clientes Supabase), SPEC 06 (leaderboard/scores) · **Fecha:** 2026-06-29
 > **Objetivo:** Reemplazar la auth falsa de localStorage por Supabase Auth real (email+password con verificación, OAuth Google/GitHub e invitado) en la página `/auth`, con sesión SSR refrescada por middleware y puntajes vinculados al usuario.
 
 ---
