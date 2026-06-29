@@ -453,8 +453,10 @@ export function initArkanoid(
     ctx.fillRect(0, 0, W, H);
 
     // Glow wraps the sprite pass only; reset before overlays/background.
-    ctx.shadowColor = palette.glowColor;
-    ctx.shadowBlur = palette.glow;
+    if (palette.glow) {
+      ctx.shadowColor = palette.glowColor;
+      ctx.shadowBlur = palette.glow;
+    }
 
     for (const block of blocks)
       if (block.alive)
@@ -486,8 +488,10 @@ export function initArkanoid(
     drawSprite(ctx, 'ball', ball.x, ball.y, ball.w, ball.h);
 
     // Reset glow so overlays render crisply.
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    if (palette.glow) {
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+    }
 
     if (gameState === 'gameover') drawOverlay('GAME OVER');
     if (gameState === 'win') drawOverlay('¡Completaste el juego!');
